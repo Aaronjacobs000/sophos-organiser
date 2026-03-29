@@ -1,0 +1,1352 @@
+/* ============================================================
+   Sophos Personal Organiser — Stylesheet
+   Brand-compliant theming for Sophos TAE productivity dashboard
+   ============================================================ */
+
+/* --- CSS Custom Properties --- */
+:root {
+  /* Brand colors */
+  --sophos-dark-blue: #001A47;
+  --sophos-blue: #2006F7;
+  --sophos-cyber-blue: #00EDFF;
+  --sophos-cyber-green: #00F2B3;
+  --sophos-light-neutral: #EDF3F9;
+  --sophos-deep-purple: #10037C;
+  --sophos-purple: #5A00FF;
+  --sophos-magenta: #B529F7;
+  --sophos-electric-blue: #009CFB;
+  --sophos-slate: #6A889B;
+  --sophos-charcoal: #223E4C;
+  --sophos-mist: #9BCFDE;
+  --sophos-red: #EA0022;
+  --sophos-orange: #F29400;
+  --sophos-yellow: #F8E300;
+  --sophos-green: #00DF58;
+  --sophos-white: #FFFFFF;
+
+  /* Category colors */
+  --cat-prospecting: var(--sophos-blue);
+  --cat-customerMeetings: var(--sophos-electric-blue);
+  --cat-quotingProposals: var(--sophos-purple);
+  --cat-internalAdmin: var(--sophos-slate);
+  --cat-followUps: var(--sophos-orange);
+  --cat-partnerEngagement: var(--sophos-cyber-green);
+
+  /* Opportunity type colors */
+  --type-newLogo: var(--sophos-cyber-green);
+  --type-expansion: var(--sophos-electric-blue);
+  --type-renewal: var(--sophos-slate);
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 60px;
+  --card-radius: 8px;
+  --radius-sm: 4px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Typography */
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-drag: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--sophos-dark-blue);
+  color: var(--sophos-white);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+a {
+  color: var(--sophos-cyber-blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 0.93rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--sophos-white);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--sophos-blue);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--sophos-slate);
+}
+select option {
+  background: var(--sophos-dark-blue);
+  color: var(--sophos-white);
+}
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* --- Page Layout --- */
+.app-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--header-height) 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* --- Header --- */
+.header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg);
+  background: linear-gradient(135deg, var(--sophos-dark-blue) 0%, var(--sophos-deep-purple) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.header-logo {
+  height: 28px;
+  width: auto;
+}
+
+.header-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: var(--sophos-white);
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.header-week-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  min-width: 220px;
+  text-align: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* --- Icon Buttons --- */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--sophos-white);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- Primary Button --- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--sophos-blue);
+  color: var(--sophos-white);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-primary:hover {
+  background: #3318ff;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sophos-white);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--sophos-red);
+  color: var(--sophos-white);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.btn-danger:hover {
+  background: #cc001e;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  background: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--spacing-md) 0;
+}
+
+.sidebar-nav {
+  padding: 0 var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--sophos-slate);
+  transition: all 0.15s;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-nav-item:hover {
+  color: var(--sophos-white);
+  background: rgba(255, 255, 255, 0.06);
+}
+.sidebar-nav-item.active {
+  color: var(--sophos-white);
+  background: rgba(32, 6, 247, 0.2);
+}
+.sidebar-nav-item svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.sidebar-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--sophos-slate);
+  padding: 0 var(--spacing-md);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+}
+
+/* --- Activity Tracker (Sidebar) --- */
+.activity-tracker {
+  padding: 0 var(--spacing-md);
+  flex: 1;
+}
+
+.activity-bar-group {
+  margin-bottom: var(--spacing-sm);
+}
+
+.activity-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  margin-bottom: 3px;
+}
+
+.activity-bar-label {
+  color: var(--sophos-slate);
+}
+
+.activity-bar-value {
+  color: var(--sophos-white);
+  font-weight: 500;
+}
+
+.activity-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.activity-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease, background-color 0.3s;
+  min-width: 2px;
+}
+
+.activity-bar-target {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 1px;
+}
+
+/* Nudge banner */
+.nudge-banner {
+  margin: var(--spacing-md) var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(242, 148, 0, 0.15);
+  border-left: 3px solid var(--sophos-orange);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--sophos-orange);
+  line-height: 1.4;
+}
+
+/* --- Main Content --- */
+.main-content {
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  scroll-behavior: smooth;
+}
+
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main-content::-webkit-scrollbar-thumb {
+  background: var(--sophos-charcoal);
+  border-radius: 4px;
+}
+
+/* --- Section --- */
+.section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.section-title svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--sophos-cyber-blue);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- Weekly Planner --- */
+.planner-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--spacing-md);
+}
+.planner-grid.show-weekends {
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.day-column {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--card-radius);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  max-height: 500px;
+  transition: border-color 0.2s;
+}
+
+.day-column.is-today {
+  border-color: var(--sophos-blue);
+  box-shadow: inset 0 2px 0 var(--sophos-blue);
+}
+
+.day-column-header {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day-column-header .day-name {
+  color: var(--sophos-white);
+}
+
+.day-column-header .day-date {
+  color: var(--sophos-slate);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.day-column.is-today .day-name {
+  color: var(--sophos-cyber-blue);
+}
+
+.day-todos {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+  min-height: 80px;
+}
+
+.day-todos::-webkit-scrollbar {
+  width: 4px;
+}
+.day-todos::-webkit-scrollbar-thumb {
+  background: var(--sophos-charcoal);
+  border-radius: 2px;
+}
+
+/* --- Todo Card --- */
+.todo-card {
+  background: var(--sophos-light-neutral);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+  color: var(--sophos-dark-blue);
+  cursor: grab;
+  transition: box-shadow 0.15s, opacity 0.2s;
+  position: relative;
+}
+
+.todo-card:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.todo-card.sortable-ghost {
+  opacity: 0.4;
+}
+
+.todo-card.sortable-drag {
+  box-shadow: var(--shadow-drag);
+}
+
+.todo-card.is-completed {
+  opacity: 0.5;
+}
+
+.todo-card.is-completed .todo-title {
+  text-decoration: line-through;
+}
+
+.todo-card-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.todo-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid var(--sophos-slate);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  background: transparent;
+}
+.todo-checkbox:hover {
+  border-color: var(--sophos-blue);
+}
+.todo-checkbox.checked {
+  background: var(--sophos-blue);
+  border-color: var(--sophos-blue);
+}
+.todo-checkbox.checked svg {
+  stroke: white;
+}
+
+.todo-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.todo-title {
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.todo-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* --- Pills / Badges --- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.pill-category {
+  color: white;
+}
+
+.priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.priority-dot.high {
+  background: var(--sophos-red);
+}
+.priority-dot.medium {
+  background: var(--sophos-orange);
+}
+.priority-dot.low {
+  background: var(--sophos-green);
+}
+
+/* Todo expand */
+.todo-expanded {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid rgba(0, 26, 71, 0.1);
+}
+
+.todo-expanded textarea {
+  width: 100%;
+  background: rgba(0, 26, 71, 0.05);
+  border-color: rgba(0, 26, 71, 0.15);
+  color: var(--sophos-dark-blue);
+  font-size: 0.8rem;
+  min-height: 40px;
+}
+.todo-expanded textarea:focus {
+  border-color: var(--sophos-blue);
+}
+
+.todo-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.todo-actions select {
+  background: rgba(0, 26, 71, 0.05);
+  border-color: rgba(0, 26, 71, 0.15);
+  color: var(--sophos-dark-blue);
+  font-size: 0.78rem;
+  padding: 3px 6px;
+}
+
+.btn-delete-todo {
+  margin-left: auto;
+  color: var(--sophos-red);
+  font-size: 0.78rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+.btn-delete-todo:hover {
+  background: rgba(234, 0, 34, 0.1);
+}
+
+/* Add todo button */
+.day-add-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.btn-add-todo {
+  width: 100%;
+  padding: 6px;
+  font-size: 0.8rem;
+  color: var(--sophos-slate);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.btn-add-todo:hover {
+  color: var(--sophos-white);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Inline add form */
+.add-todo-form {
+  padding: var(--spacing-sm);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.add-todo-form input {
+  width: 100%;
+  margin-bottom: var(--spacing-xs);
+  font-size: 0.82rem;
+  padding: 5px 8px;
+}
+
+.add-todo-form-row {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.add-todo-form-row select {
+  flex: 1;
+  font-size: 0.78rem;
+  padding: 3px 6px;
+}
+
+.add-todo-form-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+/* --- Opportunity Tracker --- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sophos-slate);
+  transition: all 0.15s;
+}
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sophos-white);
+}
+.filter-btn.active {
+  background: var(--sophos-blue);
+  color: var(--sophos-white);
+}
+
+.filter-btn .count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.7rem;
+  margin-left: 6px;
+  padding: 0 4px;
+}
+
+.sort-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.sort-controls select {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+/* Opportunity card */
+.opp-card {
+  background: var(--sophos-light-neutral);
+  border-radius: var(--card-radius);
+  margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+  color: var(--sophos-dark-blue);
+}
+.opp-card:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.opp-card-inner {
+  display: flex;
+  align-items: stretch;
+}
+
+.opp-type-stripe {
+  width: 4px;
+  flex-shrink: 0;
+}
+
+.opp-card-body {
+  flex: 1;
+  padding: var(--spacing-md);
+}
+
+.opp-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.opp-account {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.opp-deal-size {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--sophos-dark-blue);
+  white-space: nowrap;
+}
+
+.opp-card-details {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+}
+
+.opp-type-badge {
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: white;
+}
+
+.opp-stage {
+  color: var(--sophos-charcoal);
+}
+
+.opp-close-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--sophos-charcoal);
+}
+
+.opp-close-date.urgent-warning {
+  color: var(--sophos-orange);
+  font-weight: 600;
+}
+.opp-close-date.urgent-critical {
+  color: var(--sophos-red);
+  font-weight: 600;
+}
+
+.opp-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.opp-priority-flag {
+  color: var(--sophos-slate);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.opp-priority-flag.flagged {
+  color: var(--sophos-orange);
+}
+.opp-priority-flag svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+.opp-priority-flag.flagged svg {
+  fill: currentColor;
+}
+
+.opp-sf-link {
+  color: var(--sophos-blue);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.opp-sf-link svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* Opp expanded notes */
+.opp-expanded {
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  border-top: 1px solid rgba(0, 26, 71, 0.08);
+}
+
+.opp-expanded textarea {
+  width: 100%;
+  background: rgba(0, 26, 71, 0.05);
+  border-color: rgba(0, 26, 71, 0.12);
+  color: var(--sophos-dark-blue);
+  font-size: 0.82rem;
+}
+
+/* --- Add Form (shared for opps and issues) --- */
+.add-form-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--card-radius);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.add-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.add-form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  color: var(--sophos-slate);
+  margin-bottom: 3px;
+  display: block;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* --- Issues / Watch List --- */
+.status-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  width: fit-content;
+}
+
+.status-tab {
+  padding: 5px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--sophos-slate);
+  transition: all 0.15s;
+}
+.status-tab:hover {
+  color: var(--sophos-white);
+}
+.status-tab.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sophos-white);
+}
+
+.issue-card {
+  background: var(--sophos-light-neutral);
+  border-radius: var(--card-radius);
+  margin-bottom: var(--spacing-sm);
+  color: var(--sophos-dark-blue);
+  overflow: hidden;
+}
+
+.issue-card-body {
+  padding: var(--spacing-md);
+}
+
+.issue-card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.issue-type-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.issue-type-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: white;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.issue-type-icon.supportCase {
+  background: var(--sophos-electric-blue);
+}
+.issue-type-icon.customerPainPoint {
+  background: var(--sophos-orange);
+}
+.issue-type-icon.escalation {
+  background: var(--sophos-red);
+}
+.issue-type-icon.other {
+  background: var(--sophos-slate);
+}
+
+.issue-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  flex: 1;
+}
+
+.issue-account {
+  font-size: 0.82rem;
+  color: var(--sophos-charcoal);
+}
+
+.issue-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: 0.8rem;
+  color: var(--sophos-charcoal);
+}
+
+.status-pill {
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: white;
+}
+.status-pill.open {
+  background: var(--sophos-red);
+}
+.status-pill.inProgress {
+  background: var(--sophos-orange);
+}
+.status-pill.resolved {
+  background: var(--sophos-green);
+}
+
+.days-open-badge {
+  font-weight: 600;
+}
+
+/* Issue notes timeline */
+.issue-notes {
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  border-top: 1px solid rgba(0, 26, 71, 0.08);
+}
+
+.issue-note-item {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid rgba(0, 26, 71, 0.06);
+  font-size: 0.82rem;
+}
+
+.issue-note-item:last-child {
+  border-bottom: none;
+}
+
+.issue-note-timestamp {
+  font-size: 0.72rem;
+  color: var(--sophos-slate);
+  margin-bottom: 2px;
+}
+
+.issue-note-text {
+  color: var(--sophos-dark-blue);
+  line-height: 1.4;
+}
+
+.add-note-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+.add-note-form input {
+  flex: 1;
+  background: rgba(0, 26, 71, 0.05);
+  border-color: rgba(0, 26, 71, 0.12);
+  color: var(--sophos-dark-blue);
+  font-size: 0.82rem;
+}
+
+/* --- Quick Notes --- */
+.quick-notes-input {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+.quick-notes-input textarea {
+  flex: 1;
+  min-height: 44px;
+}
+
+.notes-search {
+  margin-bottom: var(--spacing-md);
+}
+.notes-search input {
+  width: 100%;
+  max-width: 300px;
+}
+
+.note-card {
+  background: var(--sophos-light-neutral);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+  color: var(--sophos-dark-blue);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.note-card.pinned {
+  border-left: 3px solid var(--sophos-cyber-blue);
+}
+
+.note-body {
+  flex: 1;
+}
+
+.note-timestamp {
+  font-size: 0.72rem;
+  color: var(--sophos-slate);
+}
+
+.note-text {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.note-actions button {
+  color: var(--sophos-slate);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+.note-actions button:hover {
+  color: var(--sophos-dark-blue);
+  background: rgba(0, 26, 71, 0.08);
+}
+.note-actions button.pin-active {
+  color: var(--sophos-cyber-blue);
+}
+
+/* --- Settings Modal --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 26, 71, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: var(--sophos-dark-blue);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--card-radius);
+  padding: var(--spacing-lg);
+  width: 90%;
+  max-width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-elevated);
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+}
+
+.modal-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.modal-section-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sophos-slate);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) 0;
+}
+
+.toggle-label {
+  font-size: 0.9rem;
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-switch.on {
+  background: var(--sophos-blue);
+}
+.toggle-switch .toggle-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+.toggle-switch.on .toggle-knob {
+  transform: translateX(18px);
+}
+
+.target-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
+  font-size: 0.85rem;
+}
+
+.target-row label {
+  flex: 1;
+  color: var(--sophos-slate);
+}
+
+.target-row input[type="number"] {
+  width: 60px;
+  text-align: center;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* --- Read-only Archive Banner --- */
+.archive-banner {
+  background: rgba(242, 148, 0, 0.12);
+  border: 1px solid rgba(242, 148, 0, 0.3);
+  border-radius: var(--card-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--sophos-orange);
+}
+
+/* --- Empty State --- */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--sophos-slate);
+  font-size: 0.9rem;
+}
+
+.empty-state svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--sophos-slate);
+  fill: none;
+  stroke-width: 1.25;
+  margin-bottom: var(--spacing-sm);
+  opacity: 0.5;
+}
+
+/* --- Utility --- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.text-muted {
+  color: var(--sophos-slate);
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+
+/* --- Transitions --- */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.slide-down-enter {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
+/* --- Print (hide sidebar) --- */
+@media print {
+  .sidebar { display: none; }
+  .app-layout { grid-template-columns: 1fr; }
+  .header { position: static; }
+}
