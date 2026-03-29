@@ -25,12 +25,12 @@
   --sophos-white: #FFFFFF;
 
   /* Category colors */
-  --cat-prospecting: var(--sophos-blue);
-  --cat-customerMeetings: var(--sophos-electric-blue);
-  --cat-quotingProposals: var(--sophos-purple);
-  --cat-internalAdmin: var(--sophos-slate);
-  --cat-followUps: var(--sophos-orange);
+  --cat-customerMeetings: var(--sophos-purple);
   --cat-partnerEngagement: var(--sophos-cyber-green);
+  --cat-prospecting: var(--sophos-blue);
+  --cat-pipelineForecasting: var(--sophos-electric-blue);
+  --cat-territoryPlanning: var(--sophos-orange);
+  --cat-enablementAdmin: var(--sophos-slate);
 
   /* Opportunity type colors */
   --type-newLogo: var(--sophos-cyber-green);
@@ -1342,6 +1342,267 @@ textarea {
   opacity: 0;
   max-height: 0;
   overflow: hidden;
+}
+
+/* --- Meeting Tracker (Sidebar) --- */
+.meeting-tracker {
+  padding: 0 var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.meeting-tracker-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--sophos-slate);
+  margin-bottom: var(--spacing-sm);
+}
+
+.meeting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.82rem;
+}
+
+.meeting-row-label {
+  color: var(--sophos-slate);
+  flex: 1;
+}
+
+.meeting-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meeting-row-count {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--sophos-white);
+}
+
+.meeting-row-target {
+  font-size: 0.72rem;
+  color: var(--sophos-slate);
+  margin-left: 2px;
+}
+
+.meeting-row-count.on-target {
+  color: var(--sophos-cyber-green);
+}
+
+.meeting-row-count.below-target {
+  color: var(--sophos-orange);
+}
+
+.btn-meeting {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sophos-slate);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.btn-meeting:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--sophos-white);
+}
+
+.meeting-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) 0;
+  margin-top: var(--spacing-xs);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sophos-white);
+}
+
+/* --- Cadence Checklist --- */
+.cadence-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.cadence-progress {
+  font-size: 0.82rem;
+  color: var(--sophos-slate);
+}
+
+.cadence-progress-count {
+  color: var(--sophos-cyber-green);
+  font-weight: 600;
+}
+
+.cadence-group-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sophos-slate);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.cadence-group-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cadence-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: 2px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.cadence-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cadence-item.completed {
+  opacity: 0.5;
+}
+
+.cadence-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 2px solid var(--sophos-slate);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.cadence-item:hover .cadence-check {
+  border-color: var(--sophos-blue);
+}
+
+.cadence-check.checked {
+  background: var(--sophos-blue);
+  border-color: var(--sophos-blue);
+}
+
+.cadence-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cadence-item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.cadence-item.completed .cadence-item-header {
+  text-decoration: line-through;
+}
+
+.cadence-duration {
+  font-size: 0.72rem;
+  color: var(--sophos-slate);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.cadence-day-badge {
+  font-size: 0.68rem;
+  color: var(--sophos-cyber-blue);
+  font-weight: 600;
+}
+
+.cadence-item-desc {
+  font-size: 0.78rem;
+  color: var(--sophos-slate);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* --- MEDDPICC Panel --- */
+.meddpicc-section {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid rgba(0, 26, 71, 0.08);
+}
+
+.meddpicc-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sophos-charcoal);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.meddpicc-score {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 8px;
+  color: white;
+}
+
+.meddpicc-score.low { background: var(--sophos-red); }
+.meddpicc-score.medium { background: var(--sophos-orange); }
+.meddpicc-score.high { background: var(--sophos-green); }
+
+.meddpicc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xs);
+}
+
+.meddpicc-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.meddpicc-field label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sophos-charcoal);
+  margin-bottom: 2px;
+}
+
+.meddpicc-field input {
+  background: rgba(0, 26, 71, 0.05);
+  border-color: rgba(0, 26, 71, 0.12);
+  color: var(--sophos-dark-blue);
+  font-size: 0.78rem;
+  padding: 4px 8px;
+}
+
+.meddpicc-field input::placeholder {
+  color: var(--sophos-slate);
+  font-size: 0.72rem;
 }
 
 /* --- Print (hide sidebar) --- */

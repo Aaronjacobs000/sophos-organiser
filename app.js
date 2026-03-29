@@ -1,45 +1,105 @@
 /* ============================================================
    Sophos Personal Organiser — Application Logic
-   Alpine.js stores, data layer, CRUD, week transitions
+   Aligned to ANZ Field "Day in the Life" Handbook v1.2
    ============================================================ */
 
-// --- Constants ---
 const STORAGE_KEY = 'sophos-organiser-data';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
+// --- Categories (aligned to handbook activity blocks) ---
 const CATEGORIES = {
-  prospecting:       { label: 'Prospecting',        color: '#2006F7' },
-  customerMeetings:  { label: 'Customer Meetings',   color: '#009CFB' },
-  quotingProposals:  { label: 'Quoting / Proposals',  color: '#5A00FF' },
-  followUps:         { label: 'Follow-ups',          color: '#F29400' },
-  partnerEngagement: { label: 'Partner Engagement',   color: '#00F2B3' },
-  internalAdmin:     { label: 'Internal / Admin',     color: '#6A889B' },
+  customerMeetings:    { label: 'Customer Meetings',     color: '#5A00FF' },
+  partnerEngagement:   { label: 'Partner Engagement',     color: '#00F2B3' },
+  prospecting:         { label: 'Prospecting',            color: '#2006F7' },
+  pipelineForecasting: { label: 'Pipeline & Forecasting', color: '#009CFB' },
+  territoryPlanning:   { label: 'Territory Planning',     color: '#F29400' },
+  enablementAdmin:     { label: 'Enablement / Admin',     color: '#6A889B' },
 };
-
 const CATEGORY_KEYS = Object.keys(CATEGORIES);
 
+// --- Opportunity Types ---
 const OPP_TYPES = {
   newLogo:   { label: 'New Logo',   color: '#00F2B3' },
   expansion: { label: 'Expansion',  color: '#009CFB' },
   renewal:   { label: 'Renewal',    color: '#6A889B' },
 };
 
+const OPP_STAGES = [
+  'Prospecting',
+  'Discovery / Qualification',
+  'Technical Validation',
+  'Proposal / Quote',
+  'Negotiation',
+  'Closed Won',
+  'Closed Lost',
+];
+
+// --- Issue Types ---
 const ISSUE_TYPES = {
   supportCase:       { label: 'Support Case',       icon: 'headset' },
   customerPainPoint: { label: 'Customer Pain Point', icon: 'alert-triangle' },
   escalation:        { label: 'Escalation',          icon: 'arrow-up-circle' },
   other:             { label: 'Other',               icon: 'circle' },
 };
-
 const ISSUE_STATUSES = ['open', 'inProgress', 'resolved'];
 
+// --- Weekly Cadence (from Day in the Life handbook) ---
+const CADENCE_ITEMS = {
+  weekly: [
+    { id: 'se-standup',      label: 'SE Weekly Action Plan',           duration: '30min', day: 'Mon', description: 'Review prior actions, align SE activities, solution map priorities' },
+    { id: 'p-matrix',        label: 'P-Matrix Activity Plan',          duration: '30min', day: 'Mon', description: 'Review P-Matrix accounts, plan engagement & resources, expansion discovery' },
+    { id: 'focus-30',        label: 'Focus 30 Expansion Review',       duration: '30min', day: 'Mon', description: 'Review Focus 30 list, targeted sales plays, research customers' },
+    { id: 'territory-review',label: 'Territory Plan Review',           duration: '30min', day: 'Mon', description: 'P-Matrix progress, Focus 30 progress, NB initiatives, adjust plan' },
+    { id: 'deal-reg',        label: 'Deal Reg Call Downs',             duration: '30min', day: 'Tue', description: 'Review & follow up on deal registrations, BANT qualify, partner alignment' },
+    { id: 'coat-tailing',    label: 'Coat Tailing Research',           duration: '30min', day: 'Tue', description: 'LinkedIn cross-reference, track customer contact movements, outreach list' },
+    { id: 'prospecting',     label: 'New Logo Prospecting',            duration: '60min', day: 'Wed', description: 'Market research, customer references, PBI whitespace, partner prospecting' },
+    { id: 'sdr-calldowns',   label: 'SDR / Mktg Follow-up',           duration: '30min', day: 'Thu', description: 'Review SDR leads (within 48hrs), Clari dashboard, outbound campaign alignment' },
+    { id: 'forecast-prep',   label: 'Forecast Prep & Deal Updates',    duration: '30min', day: 'Fri', description: 'Submit Clari forecast (Wed CoB), top 15 deal updates, MEDDPICC review for +$30K' },
+  ],
+  fortnightly: [
+    { id: 'renewal-cadence', label: 'Renewal Cadence',                 duration: '30min', description: 'Cross-sell accounts from ATR, highlight at-risk, RAM vs TAE alignment' },
+    { id: 'csm-cadence',     label: 'CSM Cadence',                     duration: '30min', description: 'Review CSM-led activity, account feedback, actions for review' },
+    { id: 'channel-cadence', label: 'Channel Cadence / Adopt a Rep',   duration: '30min', description: 'Managed partner activity, sponsor-a-rep review, joint engagement opps' },
+  ],
+  monthly: [
+    { id: 'deal-review',     label: 'Week 2/8 Deal Review',            duration: '30min', description: 'Complete deal review template, identify key NB opps, steps to close' },
+    { id: 'enablement',      label: 'Enablement',                      duration: '60min', description: 'Mindtickle training, compliance training, ad-hoc learning' },
+    { id: 'month-review',    label: 'Month in Review',                 duration: '30min', description: 'Territory performance, wins/losses analysis, activity performance, share in GTM' },
+  ],
+};
+
+const ALL_CADENCE_IDS = [
+  ...CADENCE_ITEMS.weekly,
+  ...CADENCE_ITEMS.fortnightly,
+  ...CADENCE_ITEMS.monthly,
+].map(i => i.id);
+
+// --- Meeting Targets (from handbook: 10 customer + 2 partner/week) ---
+const MEETING_TARGETS = {
+  customerCQ: 7,
+  customerNQ: 3,
+  partner: 2,
+};
+
+// --- MEDDPICC Fields (for opportunities +$30K ACV) ---
+const MEDDPICC_FIELDS = [
+  { key: 'metrics',          label: 'Metrics',           hint: 'Quantified value / business impact' },
+  { key: 'economicBuyer',    label: 'Economic Buyer',    hint: 'Who signs off? Have you met them?' },
+  { key: 'decisionCriteria', label: 'Decision Criteria',  hint: 'Technical & business requirements' },
+  { key: 'decisionProcess',  label: 'Decision Process',   hint: 'Steps, timeline, stakeholders involved' },
+  { key: 'paperProcess',     label: 'Paper Process',      hint: 'Procurement, legal, PO process' },
+  { key: 'identifyPain',     label: 'Identify Pain',      hint: 'Confirmed pain points driving the deal' },
+  { key: 'champion',         label: 'Champion',           hint: 'Internal advocate with power & influence' },
+  { key: 'competition',      label: 'Competition',        hint: 'Competitors involved, their strengths/weaknesses' },
+];
+
 const DEFAULT_TARGETS = {
-  prospecting: 30,
-  customerMeetings: 25,
-  quotingProposals: 15,
-  followUps: 15,
-  partnerEngagement: 10,
-  internalAdmin: 5,
+  customerMeetings: 35,
+  partnerEngagement: 15,
+  prospecting: 15,
+  pipelineForecasting: 15,
+  territoryPlanning: 10,
+  enablementAdmin: 10,
 };
 
 // --- Utility Functions ---
@@ -73,11 +133,14 @@ function getISOWeekKey(date) {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }
 
+function getISOWeekNumber(weekKey) {
+  return parseInt(weekKey.split('-W')[1]);
+}
+
 function getWeekDates(weekKey) {
   const [yearStr, weekStr] = weekKey.split('-W');
   const year = parseInt(yearStr);
   const week = parseInt(weekStr);
-  // Jan 4 is always in week 1
   const jan4 = new Date(year, 0, 4);
   const dayOfWeek = jan4.getDay() || 7;
   const monday = new Date(jan4);
@@ -108,17 +171,13 @@ function getDayDate(dateStr) {
 }
 
 function daysBetween(dateStr1, dateStr2) {
-  const d1 = parseDate(dateStr1);
-  const d2 = parseDate(dateStr2);
-  return Math.round((d2 - d1) / 86400000);
+  return Math.round((parseDate(dateStr2) - parseDate(dateStr1)) / 86400000);
 }
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    style: 'currency', currency: 'USD',
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
   }).format(amount);
 }
 
@@ -133,6 +192,22 @@ function navigateWeek(currentKey, delta) {
   const monday = parseDate(dates[0]);
   monday.setDate(monday.getDate() + delta * 7);
   return getISOWeekKey(monday);
+}
+
+function isFortnightlyWeek(weekKey) {
+  return getISOWeekNumber(weekKey) % 2 === 0;
+}
+
+function isFirstWeekOfMonth(weekKey) {
+  const dates = getWeekDates(weekKey);
+  const monday = parseDate(dates[0]);
+  return monday.getDate() <= 7;
+}
+
+function createEmptyMeddpicc() {
+  const m = {};
+  MEDDPICC_FIELDS.forEach(f => m[f.key] = '');
+  return m;
 }
 
 // --- Data Persistence ---
@@ -152,7 +227,7 @@ function loadData() {
 
 function saveData(state) {
   try {
-    const data = {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
       version: SCHEMA_VERSION,
       currentWeekKey: state.currentWeekKey,
       settings: state.settings,
@@ -161,15 +236,70 @@ function saveData(state) {
       issues: state.issues,
       quickNotes: state.quickNotes,
       archive: state.archive,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }));
   } catch (e) {
     console.error('Failed to save data:', e);
   }
 }
 
 function migrateData(data) {
-  // Future migration logic
+  if (data.version === 1) {
+    // v1 -> v2: New categories, add cadence/meetings to weeks, add MEDDPICC to opps
+    const oldCategoryMap = {
+      'prospecting': 'prospecting',
+      'customerMeetings': 'customerMeetings',
+      'quotingProposals': 'pipelineForecasting',
+      'followUps': 'pipelineForecasting',
+      'partnerEngagement': 'partnerEngagement',
+      'internalAdmin': 'enablementAdmin',
+    };
+
+    // Migrate todos in all weeks
+    if (data.weeks) {
+      Object.values(data.weeks).forEach(week => {
+        // Add cadence and meetings if missing
+        if (!week.cadence) {
+          week.cadence = {};
+          ALL_CADENCE_IDS.forEach(id => week.cadence[id] = false);
+        }
+        if (!week.meetings) {
+          week.meetings = { customerCQ: 0, customerNQ: 0, partner: 0 };
+        }
+        // Remap todo categories
+        if (week.days) {
+          Object.values(week.days).forEach(day => {
+            if (day.todos) {
+              day.todos.forEach(todo => {
+                todo.category = oldCategoryMap[todo.category] || todo.category;
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // Add MEDDPICC to opportunities
+    if (data.opportunities) {
+      data.opportunities.forEach(opp => {
+        if (!opp.meddpicc) opp.meddpicc = createEmptyMeddpicc();
+      });
+    }
+
+    // Migrate settings targets
+    if (data.settings && data.settings.timeAllocationTargets) {
+      const old = data.settings.timeAllocationTargets;
+      data.settings.timeAllocationTargets = {
+        customerMeetings: old.customerMeetings || 35,
+        partnerEngagement: old.partnerEngagement || 15,
+        prospecting: old.prospecting || 15,
+        pipelineForecasting: (old.quotingProposals || 0) + (old.followUps || 0) || 15,
+        territoryPlanning: 10,
+        enablementAdmin: old.internalAdmin || 10,
+      };
+    }
+
+    data.version = 2;
+  }
   return data;
 }
 
@@ -194,42 +324,48 @@ function createDefaultState() {
 }
 
 function initializeWeek(state, weekKey) {
-  if (state.weeks[weekKey]) return;
+  if (state.weeks[weekKey]) {
+    // Ensure cadence and meetings exist on existing weeks
+    if (!state.weeks[weekKey].cadence) {
+      state.weeks[weekKey].cadence = {};
+      ALL_CADENCE_IDS.forEach(id => state.weeks[weekKey].cadence[id] = false);
+    }
+    if (!state.weeks[weekKey].meetings) {
+      state.weeks[weekKey].meetings = { customerCQ: 0, customerNQ: 0, partner: 0 };
+    }
+    return;
+  }
   const dates = getWeekDates(weekKey);
   const days = {};
   for (let i = 0; i < 7; i++) {
     days[dates[i]] = { todos: [] };
   }
-  state.weeks[weekKey] = { days };
+  const cadence = {};
+  ALL_CADENCE_IDS.forEach(id => cadence[id] = false);
+  state.weeks[weekKey] = { days, cadence, meetings: { customerCQ: 0, customerNQ: 0, partner: 0 } };
 }
 
-// --- Save debouncing ---
+// --- Debounced Save ---
 let saveTimeout = null;
 function debouncedSave(state) {
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => saveData(state), 300);
 }
 
-// --- Alpine.js App Store ---
+// --- Alpine Store ---
 document.addEventListener('alpine:init', () => {
-
   const loaded = loadData();
   const initial = loaded || createDefaultState();
 
-  // Ensure current week exists
   const realWeekKey = getISOWeekKey(new Date());
-  if (!initial.weeks[realWeekKey]) {
-    initializeWeek(initial, realWeekKey);
-  }
+  initializeWeek(initial, realWeekKey);
 
-  // Auto carry-forward if week changed
   if (loaded && loaded.currentWeekKey !== realWeekKey) {
     performWeekTransition(initial, loaded.currentWeekKey, realWeekKey);
     initial.currentWeekKey = realWeekKey;
   }
 
   Alpine.store('app', {
-    // --- State ---
     ...initial,
     viewingWeekKey: initial.currentWeekKey,
     today: getToday(),
@@ -237,7 +373,7 @@ document.addEventListener('alpine:init', () => {
     // UI state
     expandedTodo: null,
     addingTodoDay: null,
-    newTodo: { title: '', category: 'prospecting', priority: 'medium' },
+    newTodo: { title: '', category: 'customerMeetings', priority: 'medium' },
     showAddOpp: false,
     newOpp: { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '' },
     expandedOpp: null,
@@ -254,23 +390,16 @@ document.addEventListener('alpine:init', () => {
     showSettings: false,
     activeNav: 'planner',
 
-    // --- Computed Helpers ---
-    get isViewingCurrentWeek() {
-      return this.viewingWeekKey === this.currentWeekKey;
-    },
-
-    get isViewingArchive() {
-      return this.viewingWeekKey !== this.currentWeekKey && !!this.archive[this.viewingWeekKey];
-    },
+    // --- Computed ---
+    get isViewingCurrentWeek() { return this.viewingWeekKey === this.currentWeekKey; },
+    get isViewingArchive() { return this.viewingWeekKey !== this.currentWeekKey && !!this.archive[this.viewingWeekKey]; },
 
     get viewingWeekDates() {
       const dates = getWeekDates(this.viewingWeekKey);
       return this.settings.showWeekends ? dates : dates.slice(0, 5);
     },
 
-    get viewingWeekDisplay() {
-      return getWeekDisplayRange(this.viewingWeekKey);
-    },
+    get viewingWeekDisplay() { return getWeekDisplayRange(this.viewingWeekKey); },
 
     get weekDays() {
       const week = this.weeks[this.viewingWeekKey];
@@ -284,7 +413,62 @@ document.addEventListener('alpine:init', () => {
       }));
     },
 
-    // Activity tracker
+    // --- Meeting Tracker ---
+    get currentMeetings() {
+      const week = this.weeks[this.currentWeekKey];
+      return week ? week.meetings : { customerCQ: 0, customerNQ: 0, partner: 0 };
+    },
+
+    get totalCustomerMeetings() {
+      const m = this.currentMeetings;
+      return m.customerCQ + m.customerNQ;
+    },
+
+    get totalMeetings() {
+      const m = this.currentMeetings;
+      return m.customerCQ + m.customerNQ + m.partner;
+    },
+
+    adjustMeeting(type, delta) {
+      const week = this.weeks[this.currentWeekKey];
+      if (!week) return;
+      week.meetings[type] = Math.max(0, (week.meetings[type] || 0) + delta);
+      debouncedSave(this);
+    },
+
+    // --- Cadence ---
+    get currentCadence() {
+      const week = this.weeks[this.viewingWeekKey];
+      return week ? week.cadence : {};
+    },
+
+    get visibleCadenceItems() {
+      const items = [];
+      CADENCE_ITEMS.weekly.forEach(item => items.push({ ...item, frequency: 'weekly' }));
+      if (isFortnightlyWeek(this.viewingWeekKey)) {
+        CADENCE_ITEMS.fortnightly.forEach(item => items.push({ ...item, frequency: 'fortnightly' }));
+      }
+      if (isFirstWeekOfMonth(this.viewingWeekKey)) {
+        CADENCE_ITEMS.monthly.forEach(item => items.push({ ...item, frequency: 'monthly' }));
+      }
+      return items;
+    },
+
+    get cadenceProgress() {
+      const visible = this.visibleCadenceItems;
+      const cadence = this.currentCadence;
+      const completed = visible.filter(i => cadence[i.id]).length;
+      return { completed, total: visible.length };
+    },
+
+    toggleCadence(itemId) {
+      const week = this.weeks[this.viewingWeekKey];
+      if (!week || !week.cadence) return;
+      week.cadence[itemId] = !week.cadence[itemId];
+      debouncedSave(this);
+    },
+
+    // --- Activity Tracker ---
     get activityStats() {
       const week = this.weeks[this.currentWeekKey];
       if (!week) return [];
@@ -293,10 +477,7 @@ document.addEventListener('alpine:init', () => {
       CATEGORY_KEYS.forEach(k => counts[k] = 0);
       Object.values(week.days).forEach(day => {
         day.todos.forEach(t => {
-          if (counts[t.category] !== undefined) {
-            counts[t.category]++;
-            total++;
-          }
+          if (counts[t.category] !== undefined) { counts[t.category]++; total++; }
         });
       });
       const targets = this.settings.timeAllocationTargets;
@@ -307,44 +488,48 @@ document.addEventListener('alpine:init', () => {
         let status = 'on-track';
         if (total > 0 && pct < target * 0.5) status = 'critical';
         else if (total > 0 && pct < target) status = 'below';
-        return {
-          key: k,
-          label: CATEGORIES[k].label,
-          color: CATEGORIES[k].color,
-          count,
-          pct,
-          target,
-          status,
-        };
+        return { key: k, label: CATEGORIES[k].label, color: CATEGORIES[k].color, count, pct, target, status };
       });
     },
 
     get nudges() {
       const msgs = [];
-      const today = new Date();
-      const dayOfWeek = today.getDay(); // 0=Sun, 3=Wed
-      if (dayOfWeek < 3 && dayOfWeek > 0) return msgs; // Mon/Tue: no nudges yet
+      const dow = new Date().getDay();
+      if (dow >= 1 && dow <= 2) return msgs; // Mon/Tue: no nudges yet
+
+      const m = this.currentMeetings;
+      const totalCust = m.customerCQ + m.customerNQ;
+      if (dow >= 3 && totalCust < 4) {
+        msgs.push('You have fewer than 4 customer meetings logged this week. Target is 10 — consider reaching out to progress current quarter deals.');
+      }
+      if (dow >= 4 && m.partner < 1) {
+        msgs.push('No partner meetings this week yet. Target is 2/week — channel engagement drives deal registrations.');
+      }
 
       this.activityStats.forEach(s => {
         if (s.status === 'critical') {
           if (s.key === 'prospecting') {
-            msgs.push('Your prospecting activity is light this week. New business drives 85% of your commission — consider blocking time for outreach.');
+            msgs.push('Prospecting activity is light. New business drives 85% of commission — block time for new logo pursuit and coat tailing.');
           } else if (s.key === 'customerMeetings') {
-            msgs.push('No customer meetings scheduled? Face time builds pipeline velocity.');
-          } else if (s.key === 'quotingProposals') {
-            msgs.push('Quoting activity is low. Any deals ready for a proposal?');
+            msgs.push('Customer meeting activity is low. Aim for 2 customer meetings + prep per day.');
+          } else if (s.key === 'pipelineForecasting') {
+            msgs.push('Pipeline management activity is low. Is your Clari forecast up to date? Review top 15 deals.');
           }
         }
       });
+
+      const cp = this.cadenceProgress;
+      if (dow >= 4 && cp.total > 0 && cp.completed < cp.total * 0.5) {
+        msgs.push(`Only ${cp.completed} of ${cp.total} cadence activities completed this week. Review your weekly rhythm.`);
+      }
+
       return msgs;
     },
 
-    // Filtered/sorted opportunities
+    // --- Filtered Opportunities ---
     get filteredOpportunities() {
       let opps = this.opportunities.filter(o => !o.archived);
-      if (this.oppFilter !== 'all') {
-        opps = opps.filter(o => o.type === this.oppFilter);
-      }
+      if (this.oppFilter !== 'all') opps = opps.filter(o => o.type === this.oppFilter);
       const sortKey = this.oppSort;
       const asc = this.oppSortAsc;
       opps.sort((a, b) => {
@@ -363,20 +548,17 @@ document.addEventListener('alpine:init', () => {
       return this.opportunities.filter(o => !o.archived && o.type === type).length;
     },
 
-    // Filtered issues
     get filteredIssues() {
       if (this.issueFilter === 'all') return this.issues;
       return this.issues.filter(i => i.status === this.issueFilter);
     },
 
-    // Filtered quick notes
     get filteredNotes() {
       let notes = [...this.quickNotes];
       if (this.notesSearch.trim()) {
         const q = this.notesSearch.toLowerCase();
         notes = notes.filter(n => n.text.toLowerCase().includes(q));
       }
-      // Pinned first, then reverse chronological
       notes.sort((a, b) => {
         if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
         return new Date(b.timestamp) - new Date(a.timestamp);
@@ -384,25 +566,23 @@ document.addEventListener('alpine:init', () => {
       return notes;
     },
 
-    // --- Todo Methods ---
+    // --- Todo CRUD ---
     startAddTodo(dayKey) {
       this.addingTodoDay = dayKey;
-      this.newTodo = { title: '', category: 'prospecting', priority: 'medium' };
+      this.newTodo = { title: '', category: 'customerMeetings', priority: 'medium' };
       setTimeout(() => {
         const input = document.querySelector(`[data-day="${dayKey}"] .add-todo-input`);
         if (input) input.focus();
       }, 50);
     },
 
-    cancelAddTodo() {
-      this.addingTodoDay = null;
-    },
+    cancelAddTodo() { this.addingTodoDay = null; },
 
     submitTodo(dayKey) {
       if (!this.newTodo.title.trim()) return;
       const week = this.weeks[this.viewingWeekKey];
       if (!week || !week.days[dayKey]) return;
-      const todo = {
+      week.days[dayKey].todos.push({
         id: generateId('todo'),
         title: this.newTodo.title.trim(),
         notes: '',
@@ -412,8 +592,7 @@ document.addEventListener('alpine:init', () => {
         completedAt: null,
         createdAt: new Date().toISOString(),
         order: week.days[dayKey].todos.length,
-      };
-      week.days[dayKey].todos.push(todo);
+      });
       this.newTodo = { title: '', category: this.newTodo.category, priority: 'medium' };
       this.addingTodoDay = null;
       debouncedSave(this);
@@ -429,9 +608,7 @@ document.addEventListener('alpine:init', () => {
       debouncedSave(this);
     },
 
-    toggleExpandTodo(todoId) {
-      this.expandedTodo = this.expandedTodo === todoId ? null : todoId;
-    },
+    toggleExpandTodo(todoId) { this.expandedTodo = this.expandedTodo === todoId ? null : todoId; },
 
     updateTodoNotes(dayKey, todoId, notes) {
       const week = this.weeks[this.viewingWeekKey];
@@ -471,18 +648,16 @@ document.addEventListener('alpine:init', () => {
       const idx = fromTodos.findIndex(t => t.id === todoId);
       if (idx === -1) return;
       const [todo] = fromTodos.splice(idx, 1);
-      const toTodos = week.days[toDay].todos;
-      toTodos.splice(newIndex, 0, todo);
-      // Reorder
+      week.days[toDay].todos.splice(newIndex, 0, todo);
       fromTodos.forEach((t, i) => t.order = i);
-      toTodos.forEach((t, i) => t.order = i);
+      week.days[toDay].todos.forEach((t, i) => t.order = i);
       debouncedSave(this);
     },
 
-    // --- Opportunity Methods ---
+    // --- Opportunity CRUD ---
     submitOpportunity() {
       if (!this.newOpp.accountName.trim()) return;
-      const opp = {
+      this.opportunities.push({
         id: generateId('opp'),
         accountName: this.newOpp.accountName.trim(),
         dealSize: parseFloat(this.newOpp.dealSize) || 0,
@@ -492,11 +667,11 @@ document.addEventListener('alpine:init', () => {
         expectedCloseDate: this.newOpp.expectedCloseDate,
         priority: false,
         notes: this.newOpp.notes.trim(),
+        meddpicc: createEmptyMeddpicc(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         archived: false,
-      };
-      this.opportunities.push(opp);
+      });
       this.newOpp = { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '' };
       this.showAddOpp = false;
       debouncedSave(this);
@@ -507,9 +682,7 @@ document.addEventListener('alpine:init', () => {
       if (opp) { opp.priority = !opp.priority; opp.updatedAt = new Date().toISOString(); debouncedSave(this); }
     },
 
-    toggleExpandOpp(oppId) {
-      this.expandedOpp = this.expandedOpp === oppId ? null : oppId;
-    },
+    toggleExpandOpp(oppId) { this.expandedOpp = this.expandedOpp === oppId ? null : oppId; },
 
     updateOppNotes(oppId, notes) {
       const opp = this.opportunities.find(o => o.id === oppId);
@@ -524,6 +697,21 @@ document.addEventListener('alpine:init', () => {
         opp.updatedAt = new Date().toISOString();
         debouncedSave(this);
       }
+    },
+
+    updateMeddpicc(oppId, field, value) {
+      const opp = this.opportunities.find(o => o.id === oppId);
+      if (opp) {
+        if (!opp.meddpicc) opp.meddpicc = createEmptyMeddpicc();
+        opp.meddpicc[field] = value;
+        opp.updatedAt = new Date().toISOString();
+        debouncedSave(this);
+      }
+    },
+
+    getMeddpiccScore(opp) {
+      if (!opp.meddpicc) return 0;
+      return MEDDPICC_FIELDS.filter(f => opp.meddpicc[f.key] && opp.meddpicc[f.key].trim()).length;
     },
 
     archiveOpportunity(oppId) {
@@ -544,10 +732,10 @@ document.addEventListener('alpine:init', () => {
       return '';
     },
 
-    // --- Issue Methods ---
+    // --- Issue CRUD ---
     submitIssue() {
       if (!this.newIssue.title.trim()) return;
-      const issue = {
+      this.issues.push({
         id: generateId('iss'),
         title: this.newIssue.title.trim(),
         account: this.newIssue.account.trim(),
@@ -561,24 +749,19 @@ document.addEventListener('alpine:init', () => {
           text: this.newIssue.notes.trim(),
           timestamp: new Date().toISOString(),
         }] : [],
-      };
-      this.issues.push(issue);
+      });
       this.newIssue = { title: '', account: '', type: 'supportCase', link: '', notes: '' };
       this.showAddIssue = false;
       debouncedSave(this);
     },
 
-    toggleExpandIssue(issueId) {
-      this.expandedIssue = this.expandedIssue === issueId ? null : issueId;
-      this.newIssueNote = '';
-    },
+    toggleExpandIssue(issueId) { this.expandedIssue = this.expandedIssue === issueId ? null : issueId; this.newIssueNote = ''; },
 
     updateIssueStatus(issueId, status) {
       const issue = this.issues.find(i => i.id === issueId);
       if (!issue) return;
       issue.status = status;
-      if (status === 'resolved') issue.resolvedAt = getToday();
-      else issue.resolvedAt = null;
+      issue.resolvedAt = status === 'resolved' ? getToday() : null;
       debouncedSave(this);
     },
 
@@ -586,11 +769,7 @@ document.addEventListener('alpine:init', () => {
       if (!this.newIssueNote.trim()) return;
       const issue = this.issues.find(i => i.id === issueId);
       if (!issue) return;
-      issue.notes.push({
-        id: generateId('note'),
-        text: this.newIssueNote.trim(),
-        timestamp: new Date().toISOString(),
-      });
+      issue.notes.push({ id: generateId('note'), text: this.newIssueNote.trim(), timestamp: new Date().toISOString() });
       this.newIssueNote = '';
       debouncedSave(this);
     },
@@ -602,19 +781,13 @@ document.addEventListener('alpine:init', () => {
     },
 
     getIssueDaysOpen(issue) {
-      const end = issue.resolvedAt || getToday();
-      return daysBetween(issue.dateOpened, end);
+      return daysBetween(issue.dateOpened, issue.resolvedAt || getToday());
     },
 
-    // --- Quick Notes Methods ---
+    // --- Quick Notes ---
     addQuickNote() {
       if (!this.newQuickNote.trim()) return;
-      this.quickNotes.push({
-        id: generateId('qn'),
-        text: this.newQuickNote.trim(),
-        timestamp: new Date().toISOString(),
-        pinned: false,
-      });
+      this.quickNotes.push({ id: generateId('qn'), text: this.newQuickNote.trim(), timestamp: new Date().toISOString(), pinned: false });
       this.newQuickNote = '';
       debouncedSave(this);
     },
@@ -632,15 +805,11 @@ document.addEventListener('alpine:init', () => {
     // --- Week Navigation ---
     goToWeek(delta) {
       this.viewingWeekKey = navigateWeek(this.viewingWeekKey, delta);
-      if (!this.weeks[this.viewingWeekKey]) {
-        initializeWeek(this, this.viewingWeekKey);
-      }
+      initializeWeek(this, this.viewingWeekKey);
       debouncedSave(this);
     },
 
-    goToCurrentWeek() {
-      this.viewingWeekKey = this.currentWeekKey;
-    },
+    goToCurrentWeek() { this.viewingWeekKey = this.currentWeekKey; },
 
     // --- Settings ---
     updateTarget(key, value) {
@@ -648,15 +817,8 @@ document.addEventListener('alpine:init', () => {
       debouncedSave(this);
     },
 
-    toggleWeekends() {
-      this.settings.showWeekends = !this.settings.showWeekends;
-      debouncedSave(this);
-    },
-
-    toggleCarryForward() {
-      this.settings.carryForwardIncomplete = !this.settings.carryForwardIncomplete;
-      debouncedSave(this);
-    },
+    toggleWeekends() { this.settings.showWeekends = !this.settings.showWeekends; debouncedSave(this); },
+    toggleCarryForward() { this.settings.carryForwardIncomplete = !this.settings.carryForwardIncomplete; debouncedSave(this); },
 
     // --- Export / Import ---
     exportData() {
@@ -686,12 +848,9 @@ document.addEventListener('alpine:init', () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const data = JSON.parse(e.target.result);
-          if (!data.version || !data.weeks) {
-            alert('Invalid backup file format.');
-            return;
-          }
-          // Replace all data
+          let data = JSON.parse(e.target.result);
+          if (!data.version || !data.weeks) { alert('Invalid backup file format.'); return; }
+          if (data.version < SCHEMA_VERSION) data = migrateData(data);
           this.currentWeekKey = data.currentWeekKey;
           this.viewingWeekKey = data.currentWeekKey;
           this.settings = data.settings;
@@ -702,9 +861,7 @@ document.addEventListener('alpine:init', () => {
           this.archive = data.archive || {};
           saveData(this);
           alert('Data imported successfully.');
-        } catch (err) {
-          alert('Failed to import: ' + err.message);
-        }
+        } catch (err) { alert('Failed to import: ' + err.message); }
       };
       reader.readAsText(file);
     },
@@ -718,7 +875,6 @@ document.addEventListener('alpine:init', () => {
       saveData(this);
     },
 
-    // --- Scroll Navigation ---
     scrollTo(sectionId) {
       this.activeNav = sectionId;
       const el = document.getElementById(sectionId);
@@ -727,23 +883,18 @@ document.addEventListener('alpine:init', () => {
   });
 });
 
-// --- Week Transition (runs before store init) ---
+// --- Week Transition ---
 function performWeekTransition(state, oldWeekKey, newWeekKey) {
   const oldWeek = state.weeks[oldWeekKey];
   if (!oldWeek) return;
 
-  const completed = [];
-  const incomplete = [];
-  const carriedIds = [];
-
+  const completed = [], incomplete = [];
   Object.values(oldWeek.days).forEach(day => {
     day.todos.forEach(todo => {
-      if (todo.completed) completed.push(todo);
-      else incomplete.push(todo);
+      (todo.completed ? completed : incomplete).push(todo);
     });
   });
 
-  // Build archive entry
   const categoryCounts = {};
   CATEGORY_KEYS.forEach(k => categoryCounts[k] = 0);
   [...completed, ...incomplete].forEach(t => {
@@ -753,41 +904,31 @@ function performWeekTransition(state, oldWeekKey, newWeekKey) {
   state.archive[oldWeekKey] = {
     completedTodos: completed,
     carriedForward: incomplete.map(t => t.id),
-    weekSummary: {
-      totalTodos: completed.length + incomplete.length,
-      completed: completed.length,
-      categoryCounts,
-    },
+    meetings: oldWeek.meetings || { customerCQ: 0, customerNQ: 0, partner: 0 },
+    cadenceCompleted: oldWeek.cadence ? Object.values(oldWeek.cadence).filter(Boolean).length : 0,
+    weekSummary: { totalTodos: completed.length + incomplete.length, completed: completed.length, categoryCounts },
   };
 
-  // Initialize new week
   initializeWeek(state, newWeekKey);
 
-  // Carry forward incomplete to Monday of new week
   if (state.settings.carryForwardIncomplete && incomplete.length > 0) {
-    const newDates = getWeekDates(newWeekKey);
-    const mondayKey = newDates[0];
+    const mondayKey = getWeekDates(newWeekKey)[0];
     incomplete.forEach(todo => {
-      const clone = {
+      state.weeks[newWeekKey].days[mondayKey].todos.push({
         ...todo,
         id: generateId('todo'),
         completed: false,
         completedAt: null,
         createdAt: new Date().toISOString(),
-      };
-      state.weeks[newWeekKey].days[mondayKey].todos.push(clone);
-      carriedIds.push(todo.id);
+      });
     });
   }
 
-  // Prune old archives (keep last 12 weeks)
   const archiveKeys = Object.keys(state.archive).sort();
-  while (archiveKeys.length > 12) {
-    delete state.archive[archiveKeys.shift()];
-  }
+  while (archiveKeys.length > 12) delete state.archive[archiveKeys.shift()];
 }
 
-// --- SortableJS Initialization (called from Alpine x-init) ---
+// --- SortableJS ---
 function initSortable(el, dayKey) {
   if (el._sortable) el._sortable.destroy();
   el._sortable = new Sortable(el, {
@@ -798,11 +939,7 @@ function initSortable(el, dayKey) {
     handle: '.todo-card',
     draggable: '.todo-card',
     onEnd(evt) {
-      const fromDay = evt.from.dataset.dayKey;
-      const toDay = evt.to.dataset.dayKey;
-      const todoId = evt.item.dataset.todoId;
-      const newIndex = evt.newIndex;
-      Alpine.store('app').moveTodo(fromDay, toDay, todoId, newIndex);
+      Alpine.store('app').moveTodo(evt.from.dataset.dayKey, evt.to.dataset.dayKey, evt.item.dataset.todoId, evt.newIndex);
     },
   });
 }
@@ -811,8 +948,6 @@ function initSortable(el, dayKey) {
 document.addEventListener('keydown', (e) => {
   const store = Alpine.store('app');
   if (!store) return;
-
-  // Escape: close modals/forms
   if (e.key === 'Escape') {
     store.showSettings = false;
     store.showAddOpp = false;
@@ -822,13 +957,10 @@ document.addEventListener('keydown', (e) => {
     store.expandedOpp = null;
     store.expandedIssue = null;
   }
-
-  // Ctrl+ArrowRight/Left: week navigation
   if (e.ctrlKey && e.key === 'ArrowRight') { e.preventDefault(); store.goToWeek(1); }
   if (e.ctrlKey && e.key === 'ArrowLeft') { e.preventDefault(); store.goToWeek(-1); }
 });
 
-// --- Save on page unload ---
 window.addEventListener('beforeunload', () => {
   const store = Alpine.store('app');
   if (store) saveData(store);
