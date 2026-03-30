@@ -4,7 +4,7 @@
    ============================================================ */
 
 const STORAGE_KEY = 'sophos-organiser-data';
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 // --- Categories ---
 const CATEGORIES = {
@@ -281,11 +281,32 @@ function migrateData(data) {
     data.version = 3;
   }
 
-  // v3 -> v4: Move cadence items to settings for customization, add day to fortnightly/monthly
+  // v3 -> v4: Move cadence items to settings for customization
   if (data.version === 3) {
     if (!data.settings) data.settings = {};
     data.settings.cadenceItems = JSON.parse(JSON.stringify(DEFAULT_CADENCE_ITEMS));
     data.version = 4;
+  }
+
+  // v4 -> v5: Opp notes string -> timestamped array, add nextStep fields to opps and issues
+  if (data.version === 4) {
+    if (data.opportunities) {
+      data.opportunities.forEach(opp => {
+        // Convert string notes to timestamped array
+        if (typeof opp.notes === 'string') {
+          opp.notes = opp.notes.trim() ? [{ id: generateId('on'), text: opp.notes.trim(), timestamp: opp.createdAt || new Date().toISOString() }] : [];
+        }
+        if (!opp.nextStepDate) opp.nextStepDate = '';
+        if (!opp.nextStepText) opp.nextStepText = '';
+      });
+    }
+    if (data.issues) {
+      data.issues.forEach(iss => {
+        if (!iss.nextStepDate) iss.nextStepDate = '';
+        if (!iss.nextStepText) iss.nextStepText = '';
+      });
+    }
+    data.version = 5;
   }
 
   return data;
@@ -352,13 +373,14 @@ document.addEventListener('alpine:init', () => {
     todoFilter: 'active', // active, today, overdue, completed, all
     todoNoteText: '',
     showAddOpp: false,
-    newOpp: { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '' },
+    newOpp: { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '', nextStepDate: '', nextStepText: '' },
     expandedOpp: null,
+    newOppNote: '',
     oppFilter: 'all',
     oppSort: 'expectedCloseDate',
     oppSortAsc: true,
     showAddIssue: false,
-    newIssue: { title: '', account: '', type: 'supportCase', link: '', notes: '' },
+    newIssue: { title: '', account: '', type: 'supportCase', link: '', notes: '', nextStepDate: '', nextStepText: '' },
     expandedIssue: null,
     issueFilter: 'open',
     newIssueNote: '',
@@ -378,10 +400,10 @@ document.addEventListener('alpine:init', () => {
     },
     get viewingWeekDisplay() { return getWeekDisplayRange(this.viewingWeekKey); },
 
-    // ======= PLANNER: todos + cadence items grouped by day =======
+    // ======= PLANNER: todos + cadence + next steps grouped by day =======
     get weekDays() {
       return this.viewingWeekDates.map(dateStr => {
-        const dayAbbrev = getDayName(dateStr); // Mon, Tue, etc.
+        const dayAbbrev = getDayName(dateStr);
         return {
           dateStr,
           dayName: dayAbbrev,
@@ -394,6 +416,8 @@ document.addEventListener('alpine:init', () => {
             .filter(t => t.dueDate === dateStr && t.completed)
             .sort((a, b) => (PRIORITIES[a.priority]?.sort || 2) - (PRIORITIES[b.priority]?.sort || 2)),
           cadenceItems: this.visibleCadenceItems.filter(i => i.day === dayAbbrev),
+          oppNextSteps: this.opportunities.filter(o => !o.archived && o.nextStepDate === dateStr),
+          issueNextSteps: this.issues.filter(i => i.status !== 'resolved' && i.nextStepDate === dateStr),
         };
       });
     },
@@ -679,20 +703,35 @@ document.addEventListener('alpine:init', () => {
     oppCountByType(type) { return this.opportunities.filter(o => !o.archived && (type === 'all' || o.type === type)).length; },
     submitOpportunity() {
       if (!this.newOpp.accountName.trim()) return;
+      const initialNotes = this.newOpp.notes.trim()
+        ? [{ id: generateId('on'), text: this.newOpp.notes.trim(), timestamp: new Date().toISOString() }]
+        : [];
       this.opportunities.push({
         id: generateId('opp'), accountName: this.newOpp.accountName.trim(),
         dealSize: parseFloat(this.newOpp.dealSize) || 0, type: this.newOpp.type,
         stage: this.newOpp.stage.trim(), salesforceLink: this.newOpp.salesforceLink.trim(),
         expectedCloseDate: this.newOpp.expectedCloseDate, priority: false,
-        notes: this.newOpp.notes.trim(), meddpicc: createEmptyMeddpicc(),
+        notes: initialNotes,
+        nextStepDate: this.newOpp.nextStepDate || '',
+        nextStepText: this.newOpp.nextStepText || '',
+        meddpicc: createEmptyMeddpicc(),
         createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), archived: false,
       });
-      this.newOpp = { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '' };
+      this.newOpp = { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '', nextStepDate: '', nextStepText: '' };
       this.showAddOpp = false; debouncedSave(this);
     },
     toggleOppPriority(id) { const o = this.opportunities.find(x => x.id === id); if (o) { o.priority = !o.priority; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
-    toggleExpandOpp(id) { this.expandedOpp = this.expandedOpp === id ? null : id; },
-    updateOppNotes(id, notes) { const o = this.opportunities.find(x => x.id === id); if (o) { o.notes = notes; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
+    toggleExpandOpp(id) { this.expandedOpp = this.expandedOpp === id ? null : id; this.newOppNote = ''; },
+    addOppNote(id) {
+      if (!this.newOppNote.trim()) return;
+      const o = this.opportunities.find(x => x.id === id);
+      if (!o) return;
+      if (!Array.isArray(o.notes)) o.notes = [];
+      o.notes.push({ id: generateId('on'), text: this.newOppNote.trim(), timestamp: new Date().toISOString() });
+      this.newOppNote = '';
+      o.updatedAt = new Date().toISOString();
+      debouncedSave(this);
+    },
     updateOppField(id, field, value) { const o = this.opportunities.find(x => x.id === id); if (o) { o[field] = field === 'dealSize' ? (parseFloat(value) || 0) : value; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
     updateMeddpicc(id, field, value) { const o = this.opportunities.find(x => x.id === id); if (o) { if (!o.meddpicc) o.meddpicc = createEmptyMeddpicc(); o.meddpicc[field] = value; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
     getMeddpiccScore(opp) { if (!opp.meddpicc) return 0; return MEDDPICC_FIELDS.filter(f => opp.meddpicc[f.key]?.trim()).length; },
@@ -708,14 +747,17 @@ document.addEventListener('alpine:init', () => {
         id: generateId('iss'), title: this.newIssue.title.trim(), account: this.newIssue.account.trim(),
         type: this.newIssue.type, status: 'open', link: this.newIssue.link.trim(),
         dateOpened: getToday(), resolvedAt: null,
+        nextStepDate: this.newIssue.nextStepDate || '',
+        nextStepText: this.newIssue.nextStepText || '',
         notes: this.newIssue.notes.trim() ? [{ id: generateId('note'), text: this.newIssue.notes.trim(), timestamp: new Date().toISOString() }] : [],
       });
-      this.newIssue = { title: '', account: '', type: 'supportCase', link: '', notes: '' };
+      this.newIssue = { title: '', account: '', type: 'supportCase', link: '', notes: '', nextStepDate: '', nextStepText: '' };
       this.showAddIssue = false; debouncedSave(this);
     },
     toggleExpandIssue(id) { this.expandedIssue = this.expandedIssue === id ? null : id; this.newIssueNote = ''; },
     updateIssueStatus(id, status) { const i = this.issues.find(x => x.id === id); if (i) { i.status = status; i.resolvedAt = status === 'resolved' ? getToday() : null; debouncedSave(this); } },
     addIssueNote(id) { if (!this.newIssueNote.trim()) return; const i = this.issues.find(x => x.id === id); if (i) { i.notes.push({ id: generateId('note'), text: this.newIssueNote.trim(), timestamp: new Date().toISOString() }); this.newIssueNote = ''; debouncedSave(this); } },
+    updateIssueField(id, field, value) { const i = this.issues.find(x => x.id === id); if (i) { i[field] = value; debouncedSave(this); } },
     deleteIssue(id) { this.issues = this.issues.filter(x => x.id !== id); if (this.expandedIssue === id) this.expandedIssue = null; debouncedSave(this); },
     getIssueDaysOpen(issue) { return daysBetween(issue.dateOpened, issue.resolvedAt || getToday()); },
 

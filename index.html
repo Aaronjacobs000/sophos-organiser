@@ -124,6 +124,23 @@
                   </div>
                 </template>
               </div>
+              <!-- Next steps: opportunities -->
+              <div class="planner-nextstep-list" x-show="day.oppNextSteps.length > 0 || day.issueNextSteps.length > 0">
+                <template x-for="opp in day.oppNextSteps" :key="opp.id">
+                  <div class="planner-nextstep-chip opp-chip" :title="opp.nextStepText || opp.accountName">
+                    <svg viewBox="0 0 24 24"><use href="#icon-target"/></svg>
+                    <span class="chip-label" x-text="opp.nextStepText || opp.accountName"></span>
+                    <span class="chip-sub" x-text="opp.accountName" x-show="opp.nextStepText"></span>
+                  </div>
+                </template>
+                <template x-for="iss in day.issueNextSteps" :key="iss.id">
+                  <div class="planner-nextstep-chip issue-chip" :title="iss.nextStepText || iss.title">
+                    <svg viewBox="0 0 24 24"><use href="#icon-alert-circle"/></svg>
+                    <span class="chip-label" x-text="iss.nextStepText || iss.title"></span>
+                    <span class="chip-sub" x-text="iss.account" x-show="iss.account"></span>
+                  </div>
+                </template>
+              </div>
               <div class="day-todos" :data-day-key="day.dateStr" x-init="$nextTick(() => initSortable($el, day.dateStr))">
                 <template x-for="todo in day.todos" :key="todo.id">
                   <div class="todo-card" :data-todo-id="todo.id">
@@ -393,7 +410,9 @@
             <div class="form-group"><label class="form-label">Stage</label><select x-model="$store.app.newOpp.stage"><option value="">Select stage...</option><template x-for="stage in OPP_STAGES" :key="stage"><option :value="stage" x-text="stage"></option></template></select></div>
             <div class="form-group"><label class="form-label">Expected Close Date</label><input type="date" x-model="$store.app.newOpp.expectedCloseDate"></div>
             <div class="form-group"><label class="form-label">Salesforce Link</label><input type="url" x-model="$store.app.newOpp.salesforceLink" placeholder="https://sophos.my.salesforce.com/..."></div>
-            <div class="form-group full-width"><label class="form-label">Notes</label><textarea x-model="$store.app.newOpp.notes" placeholder="Key contacts, next steps, etc."></textarea></div>
+            <div class="form-group"><label class="form-label">Next Step Date</label><input type="date" x-model="$store.app.newOpp.nextStepDate"></div>
+            <div class="form-group"><label class="form-label">Next Step</label><input type="text" x-model="$store.app.newOpp.nextStepText" placeholder="e.g. Send proposal"></div>
+            <div class="form-group full-width"><label class="form-label">Initial Note</label><textarea x-model="$store.app.newOpp.notes" placeholder="Key contacts, context, etc."></textarea></div>
           </div>
           <div class="add-form-actions"><button class="btn-primary" @click="$store.app.submitOpportunity()">Save Opportunity</button><button class="btn-secondary" @click="$store.app.showAddOpp = false">Cancel</button></div>
         </div>
@@ -435,7 +454,27 @@
                 <div class="form-group"><label class="form-label">Close Date</label><input type="date" :value="opp.expectedCloseDate" @change="$store.app.updateOppField(opp.id, 'expectedCloseDate', $event.target.value)"></div>
                 <div class="form-group"><label class="form-label">Type</label><select :value="opp.type" @change="$store.app.updateOppField(opp.id, 'type', $event.target.value)"><option value="newLogo">New Logo</option><option value="expansion">Expansion</option><option value="renewal">Renewal</option></select></div>
               </div>
-              <div class="form-group" style="margin-bottom:8px;"><label class="form-label">Notes</label><textarea :value="opp.notes" @input="$store.app.updateOppNotes(opp.id, $event.target.value)" placeholder="Key contacts, next steps..."></textarea></div>
+              <!-- Next Step -->
+              <div class="next-step-row">
+                <div class="form-group"><label class="form-label">Next Step Date</label><input type="date" :value="opp.nextStepDate" @change="$store.app.updateOppField(opp.id, 'nextStepDate', $event.target.value)"></div>
+                <div class="form-group" style="flex:2"><label class="form-label">Next Step</label><input type="text" :value="opp.nextStepText" @change="$store.app.updateOppField(opp.id, 'nextStepText', $event.target.value)" placeholder="e.g. Send proposal, schedule POC"></div>
+              </div>
+              <!-- Notes Timeline -->
+              <div class="issue-notes" style="padding:0;border:none;">
+                <div class="form-label" style="margin-bottom:4px;">Notes</div>
+                <template x-for="note in (Array.isArray(opp.notes) ? opp.notes : [])" :key="note.id">
+                  <div class="issue-note-item">
+                    <div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div>
+                    <div class="issue-note-text" x-text="note.text"></div>
+                  </div>
+                </template>
+                <div class="empty-state" x-show="!Array.isArray(opp.notes) || opp.notes.length === 0" style="padding:4px 0;"><div class="text-muted" style="font-size:0.82rem;">No notes yet.</div></div>
+                <div class="add-note-form">
+                  <input type="text" placeholder="Add a note..." x-model="$store.app.newOppNote" @keydown.enter="$store.app.addOppNote(opp.id)">
+                  <button class="btn-primary btn-sm" @click="$store.app.addOppNote(opp.id)">Add</button>
+                </div>
+              </div>
+              <!-- MEDDPICC -->
               <div class="meddpicc-section" x-show="opp.dealSize >= 30000">
                 <div class="meddpicc-title">MEDDPICC Qualification <span class="meddpicc-score" :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }" x-text="$store.app.getMeddpiccScore(opp) + ' / 8'"></span></div>
                 <div class="meddpicc-grid"><template x-for="field in MEDDPICC_FIELDS" :key="field.key"><div class="meddpicc-field"><label x-text="field.label"></label><input type="text" :placeholder="field.hint" :value="opp.meddpicc ? opp.meddpicc[field.key] : ''" @input="$store.app.updateMeddpicc(opp.id, field.key, $event.target.value)"></div></template></div>
@@ -459,6 +498,8 @@
             <div class="form-group"><label class="form-label">Account</label><input type="text" x-model="$store.app.newIssue.account" placeholder="Customer name"></div>
             <div class="form-group"><label class="form-label">Type</label><select x-model="$store.app.newIssue.type"><option value="supportCase">Support Case</option><option value="customerPainPoint">Customer Pain Point</option><option value="escalation">Escalation</option><option value="other">Other</option></select></div>
             <div class="form-group"><label class="form-label">Link (optional)</label><input type="url" x-model="$store.app.newIssue.link" placeholder="https://support.sophos.com/..."></div>
+            <div class="form-group"><label class="form-label">Next Step Date</label><input type="date" x-model="$store.app.newIssue.nextStepDate"></div>
+            <div class="form-group"><label class="form-label">Next Step</label><input type="text" x-model="$store.app.newIssue.nextStepText" placeholder="e.g. Follow up with support"></div>
             <div class="form-group full-width"><label class="form-label">Initial Note</label><textarea x-model="$store.app.newIssue.notes" placeholder="Context, details..."></textarea></div>
           </div>
           <div class="add-form-actions"><button class="btn-primary" @click="$store.app.submitIssue()">Save Issue</button><button class="btn-secondary" @click="$store.app.showAddIssue = false">Cancel</button></div>
@@ -486,6 +527,11 @@
                 <span class="form-label" style="margin:0">Status:</span>
                 <select :value="issue.status" @change="$store.app.updateIssueStatus(issue.id, $event.target.value)" style="font-size:0.82rem;padding:3px 6px;"><option value="open">Open</option><option value="inProgress">In Progress</option><option value="resolved">Resolved</option></select>
                 <button class="btn-danger btn-sm" style="margin-left:auto" @click="$store.app.deleteIssue(issue.id)">Remove</button>
+              </div>
+              <!-- Next Step -->
+              <div class="next-step-row">
+                <div class="form-group"><label class="form-label">Next Step Date</label><input type="date" :value="issue.nextStepDate" @change="$store.app.updateIssueField(issue.id, 'nextStepDate', $event.target.value)"></div>
+                <div class="form-group" style="flex:2"><label class="form-label">Next Step</label><input type="text" :value="issue.nextStepText" @change="$store.app.updateIssueField(issue.id, 'nextStepText', $event.target.value)" placeholder="e.g. Follow up with L3 support"></div>
               </div>
               <template x-for="note in issue.notes" :key="note.id"><div class="issue-note-item"><div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="issue-note-text" x-text="note.text"></div></div></template>
               <div class="add-note-form"><input type="text" placeholder="Add a note..." x-model="$store.app.newIssueNote" @keydown.enter="$store.app.addIssueNote(issue.id)"><button class="btn-primary btn-sm" @click="$store.app.addIssueNote(issue.id)">Add</button></div>
