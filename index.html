@@ -113,6 +113,17 @@
                 <span class="day-name" x-text="day.dayName"></span>
                 <span class="day-date" x-text="day.dayDate"></span>
               </div>
+              <!-- Cadence items for this day -->
+              <div class="planner-cadence-list" x-show="day.cadenceItems.length > 0">
+                <template x-for="ci in day.cadenceItems" :key="ci.id">
+                  <div class="planner-cadence-chip" :class="{ done: $store.app.currentCadence[ci.id] }"
+                       @click="$store.app.toggleCadence(ci.id)" :title="ci.description">
+                    <svg viewBox="0 0 24 24"><use href="#icon-check-circle"/></svg>
+                    <span x-text="ci.label"></span>
+                    <span class="chip-duration" x-text="ci.duration"></span>
+                  </div>
+                </template>
+              </div>
               <div class="day-todos" :data-day-key="day.dateStr" x-init="$nextTick(() => initSortable($el, day.dateStr))">
                 <template x-for="todo in day.todos" :key="todo.id">
                   <div class="todo-card" :data-todo-id="todo.id">
@@ -342,28 +353,11 @@
           </span>
         </div>
 
-        <div class="cadence-group-title">Weekly</div>
-        <template x-for="item in CADENCE_ITEMS.weekly" :key="item.id">
-          <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }" @click="$store.app.toggleCadence(item.id)">
-            <div class="cadence-check" :class="{ checked: $store.app.currentCadence[item.id] }">
-              <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
-            </div>
-            <div class="cadence-item-content">
-              <div class="cadence-item-header">
-                <span x-text="item.label"></span>
-                <span class="cadence-duration" x-text="item.duration"></span>
-                <span class="cadence-day-badge" x-text="item.day"></span>
-                <span class="cadence-timestamp" x-show="$store.app.getCadenceTime(item.id)" x-text="$store.app.getCadenceTime(item.id)"></span>
-              </div>
-              <div class="cadence-item-desc" x-text="item.description"></div>
-            </div>
-          </div>
-        </template>
-
-        <template x-if="$store.app.visibleCadenceItems.some(i => i.frequency === 'fortnightly')">
-          <div>
-            <div class="cadence-group-title">Fortnightly</div>
-            <template x-for="item in CADENCE_ITEMS.fortnightly" :key="item.id">
+        <!-- Group by frequency -->
+        <template x-for="[freq, freqLabel] in [['weekly','Weekly'],['fortnightly','Fortnightly'],['monthly','Monthly']]" :key="freq">
+          <div x-show="$store.app.visibleCadenceItems.some(i => i.frequency === freq)">
+            <div class="cadence-group-title" x-text="freqLabel"></div>
+            <template x-for="item in $store.app.visibleCadenceItems.filter(i => i.frequency === freq)" :key="item.id">
               <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }" @click="$store.app.toggleCadence(item.id)">
                 <div class="cadence-check" :class="{ checked: $store.app.currentCadence[item.id] }">
                   <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
@@ -372,27 +366,7 @@
                   <div class="cadence-item-header">
                     <span x-text="item.label"></span>
                     <span class="cadence-duration" x-text="item.duration"></span>
-                    <span class="cadence-timestamp" x-show="$store.app.getCadenceTime(item.id)" x-text="$store.app.getCadenceTime(item.id)"></span>
-                  </div>
-                  <div class="cadence-item-desc" x-text="item.description"></div>
-                </div>
-              </div>
-            </template>
-          </div>
-        </template>
-
-        <template x-if="$store.app.visibleCadenceItems.some(i => i.frequency === 'monthly')">
-          <div>
-            <div class="cadence-group-title">Monthly</div>
-            <template x-for="item in CADENCE_ITEMS.monthly" :key="item.id">
-              <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }" @click="$store.app.toggleCadence(item.id)">
-                <div class="cadence-check" :class="{ checked: $store.app.currentCadence[item.id] }">
-                  <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
-                </div>
-                <div class="cadence-item-content">
-                  <div class="cadence-item-header">
-                    <span x-text="item.label"></span>
-                    <span class="cadence-duration" x-text="item.duration"></span>
+                    <span class="cadence-day-badge" x-text="item.day"></span>
                     <span class="cadence-timestamp" x-show="$store.app.getCadenceTime(item.id)" x-text="$store.app.getCadenceTime(item.id)"></span>
                   </div>
                   <div class="cadence-item-desc" x-text="item.description"></div>
@@ -554,6 +528,42 @@
         <div class="modal-section">
           <div class="modal-section-title">Activity Targets (%)</div>
           <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key"><div class="target-row"><label x-text="cat.label"></label><input type="number" min="0" max="100" :value="$store.app.settings.timeAllocationTargets[key]" @change="$store.app.updateTarget(key, $event.target.value)"><span class="text-muted">%</span></div></template>
+        </div>
+        <div class="modal-section">
+          <div class="modal-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+            Cadence Items
+            <div style="display:flex;gap:4px;">
+              <button class="btn-secondary btn-sm" @click="$store.app.showAddCadence = !$store.app.showAddCadence" style="text-transform:none;letter-spacing:0;font-size:0.75rem;">+ Add</button>
+              <button class="btn-secondary btn-sm" @click="$store.app.resetCadenceToDefaults()" style="text-transform:none;letter-spacing:0;font-size:0.75rem;">Reset</button>
+            </div>
+          </div>
+          <!-- Add cadence form -->
+          <div class="add-form-panel" x-show="$store.app.showAddCadence" x-transition.opacity style="margin-bottom:8px;padding:8px;">
+            <div class="add-form-grid">
+              <div class="form-group full-width"><label class="form-label">Label</label><input type="text" x-model="$store.app.newCadence.label" placeholder="Activity name" @keydown.enter="$store.app.addCadenceItem($store.app.newCadence); $store.app.newCadence = { label: '', duration: '30min', day: 'Mon', frequency: 'weekly', description: '' };"></div>
+              <div class="form-group"><label class="form-label">Day</label><select x-model="$store.app.newCadence.day"><template x-for="d in DAY_ABBREVS" :key="d"><option :value="d" x-text="d"></option></template></select></div>
+              <div class="form-group"><label class="form-label">Frequency</label><select x-model="$store.app.newCadence.frequency"><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option><option value="monthly">Monthly</option></select></div>
+              <div class="form-group"><label class="form-label">Duration</label><input type="text" x-model="$store.app.newCadence.duration" placeholder="e.g. 30min"></div>
+              <div class="form-group full-width"><label class="form-label">Description</label><input type="text" x-model="$store.app.newCadence.description" placeholder="What this activity involves"></div>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:6px;">
+              <button class="btn-primary btn-sm" @click="$store.app.addCadenceItem($store.app.newCadence); $store.app.newCadence = { label: '', duration: '30min', day: 'Mon', frequency: 'weekly', description: '' }; $store.app.showAddCadence = false;">Add</button>
+              <button class="btn-secondary btn-sm" @click="$store.app.showAddCadence = false">Cancel</button>
+            </div>
+          </div>
+          <!-- Cadence item list -->
+          <div style="max-height:250px;overflow-y:auto;">
+            <template x-for="item in $store.app.cadenceItems" :key="item.id">
+              <div class="cadence-manage-item">
+                <span class="cadence-manage-label" x-text="item.label"></span>
+                <select style="width:55px;font-size:0.72rem;padding:2px 3px;" :value="item.day" @change="$store.app.updateCadenceItem(item.id, 'day', $event.target.value)">
+                  <template x-for="d in DAY_ABBREVS" :key="d"><option :value="d" x-text="d"></option></template>
+                </select>
+                <span class="cadence-manage-freq" x-text="item.frequency"></span>
+                <button class="btn-icon" style="width:24px;height:24px;" @click="$store.app.deleteCadenceItem(item.id)" title="Remove"><svg width="14" height="14" viewBox="0 0 24 24" stroke="var(--sophos-red)" fill="none" stroke-width="1.5"><use href="#icon-trash"/></svg></button>
+              </div>
+            </template>
+          </div>
         </div>
         <div class="modal-section">
           <div class="modal-section-title">Data Management</div>

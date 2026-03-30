@@ -4,7 +4,7 @@
    ============================================================ */
 
 const STORAGE_KEY = 'sophos-organiser-data';
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 // --- Categories ---
 const CATEGORIES = {
@@ -55,33 +55,33 @@ const ISSUE_TYPES = {
   other:             { label: 'Other',               icon: 'circle' },
 };
 
-// --- Weekly Cadence ---
-const CADENCE_ITEMS = {
-  weekly: [
-    { id: 'se-standup',      label: 'SE Weekly Action Plan',           duration: '30min', day: 'Mon', description: 'Review prior actions, align SE activities, solution map priorities' },
-    { id: 'p-matrix',        label: 'P-Matrix Activity Plan',          duration: '30min', day: 'Mon', description: 'Review P-Matrix accounts, plan engagement & resources, expansion discovery' },
-    { id: 'focus-30',        label: 'Focus 30 Expansion Review',       duration: '30min', day: 'Mon', description: 'Review Focus 30 list, targeted sales plays, research customers' },
-    { id: 'territory-review',label: 'Territory Plan Review',           duration: '30min', day: 'Mon', description: 'P-Matrix progress, Focus 30 progress, NB initiatives, adjust plan' },
-    { id: 'deal-reg',        label: 'Deal Reg Call Downs',             duration: '30min', day: 'Tue', description: 'Review & follow up on deal registrations, BANT qualify, partner alignment' },
-    { id: 'coat-tailing',    label: 'Coat Tailing Research',           duration: '30min', day: 'Tue', description: 'LinkedIn cross-reference, track customer contact movements, outreach list' },
-    { id: 'prospecting',     label: 'New Logo Prospecting',            duration: '60min', day: 'Wed', description: 'Market research, customer references, PBI whitespace, partner prospecting' },
-    { id: 'sdr-calldowns',   label: 'SDR / Mktg Follow-up',           duration: '30min', day: 'Thu', description: 'Review SDR leads (within 48hrs), Clari dashboard, outbound campaign alignment' },
-    { id: 'forecast-prep',   label: 'Forecast Prep & Deal Updates',    duration: '30min', day: 'Fri', description: 'Submit Clari forecast (Wed CoB), top 15 deal updates, MEDDPICC review for +$30K' },
-  ],
-  fortnightly: [
-    { id: 'renewal-cadence', label: 'Renewal Cadence',                 duration: '30min', description: 'Cross-sell accounts from ATR, highlight at-risk, RAM vs TAE alignment' },
-    { id: 'csm-cadence',     label: 'CSM Cadence',                     duration: '30min', description: 'Review CSM-led activity, account feedback, actions for review' },
-    { id: 'channel-cadence', label: 'Channel Cadence / Adopt a Rep',   duration: '30min', description: 'Managed partner activity, sponsor-a-rep review, joint engagement opps' },
-  ],
-  monthly: [
-    { id: 'deal-review',     label: 'Week 2/8 Deal Review',            duration: '30min', description: 'Complete deal review template, identify key NB opps, steps to close' },
-    { id: 'enablement',      label: 'Enablement',                      duration: '60min', description: 'Mindtickle training, compliance training, ad-hoc learning' },
-    { id: 'month-review',    label: 'Month in Review',                 duration: '30min', description: 'Territory performance, wins/losses analysis, activity performance, share in GTM' },
-  ],
+// --- Weekly Cadence (defaults — copied to settings on first run, user can customize) ---
+const DAY_ABBREVS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const CADENCE_FREQUENCIES = {
+  weekly: { label: 'Weekly' },
+  fortnightly: { label: 'Fortnightly' },
+  monthly: { label: 'Monthly' },
 };
-const ALL_CADENCE_IDS = [
-  ...CADENCE_ITEMS.weekly, ...CADENCE_ITEMS.fortnightly, ...CADENCE_ITEMS.monthly,
-].map(i => i.id);
+
+const DEFAULT_CADENCE_ITEMS = [
+  { id: 'se-standup',      label: 'SE Weekly Action Plan',           duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review prior actions, align SE activities, solution map priorities' },
+  { id: 'p-matrix',        label: 'P-Matrix Activity Plan',          duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review P-Matrix accounts, plan engagement & resources, expansion discovery' },
+  { id: 'focus-30',        label: 'Focus 30 Expansion Review',       duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review Focus 30 list, targeted sales plays, research customers' },
+  { id: 'territory-review',label: 'Territory Plan Review',           duration: '30min', day: 'Mon', frequency: 'weekly', description: 'P-Matrix progress, Focus 30 progress, NB initiatives, adjust plan' },
+  { id: 'deal-reg',        label: 'Deal Reg Call Downs',             duration: '30min', day: 'Tue', frequency: 'weekly', description: 'Review & follow up on deal registrations, BANT qualify, partner alignment' },
+  { id: 'coat-tailing',    label: 'Coat Tailing Research',           duration: '30min', day: 'Tue', frequency: 'weekly', description: 'LinkedIn cross-reference, track customer contact movements, outreach list' },
+  { id: 'prospecting',     label: 'New Logo Prospecting',            duration: '60min', day: 'Wed', frequency: 'weekly', description: 'Market research, customer references, PBI whitespace, partner prospecting' },
+  { id: 'sdr-calldowns',   label: 'SDR / Mktg Follow-up',           duration: '30min', day: 'Thu', frequency: 'weekly', description: 'Review SDR leads (within 48hrs), Clari dashboard, outbound campaign alignment' },
+  { id: 'forecast-prep',   label: 'Forecast Prep & Deal Updates',    duration: '30min', day: 'Fri', frequency: 'weekly', description: 'Submit Clari forecast (Wed CoB), top 15 deal updates, MEDDPICC review for +$30K' },
+  { id: 'renewal-cadence', label: 'Renewal Cadence',                 duration: '30min', day: 'Mon', frequency: 'fortnightly', description: 'Cross-sell accounts from ATR, highlight at-risk, RAM vs TAE alignment' },
+  { id: 'csm-cadence',     label: 'CSM Cadence',                     duration: '30min', day: 'Fri', frequency: 'fortnightly', description: 'Review CSM-led activity, account feedback, actions for review' },
+  { id: 'channel-cadence', label: 'Channel Cadence / Adopt a Rep',   duration: '30min', day: 'Wed', frequency: 'fortnightly', description: 'Managed partner activity, sponsor-a-rep review, joint engagement opps' },
+  { id: 'deal-review',     label: 'Week 2/8 Deal Review',            duration: '30min', day: 'Mon', frequency: 'monthly', description: 'Complete deal review template, identify key NB opps, steps to close' },
+  { id: 'enablement',      label: 'Enablement',                      duration: '60min', day: 'Thu', frequency: 'monthly', description: 'Mindtickle training, compliance training, ad-hoc learning' },
+  { id: 'month-review',    label: 'Month in Review',                 duration: '30min', day: 'Fri', frequency: 'monthly', description: 'Territory performance, wins/losses analysis, activity performance, share in GTM' },
+];
+
+function getCadenceIds(items) { return items.map(i => i.id); }
 
 const MEETING_TARGETS = { customerCQ: 7, customerNQ: 3, partner: 2 };
 
@@ -281,6 +281,13 @@ function migrateData(data) {
     data.version = 3;
   }
 
+  // v3 -> v4: Move cadence items to settings for customization, add day to fortnightly/monthly
+  if (data.version === 3) {
+    if (!data.settings) data.settings = {};
+    data.settings.cadenceItems = JSON.parse(JSON.stringify(DEFAULT_CADENCE_ITEMS));
+    data.version = 4;
+  }
+
   return data;
 }
 
@@ -289,7 +296,7 @@ function createDefaultState() {
   const weekKey = getISOWeekKey(today);
   const state = {
     currentWeekKey: weekKey,
-    settings: { showWeekends: false, carryForwardIncomplete: true, timeAllocationTargets: { ...DEFAULT_TARGETS } },
+    settings: { showWeekends: false, carryForwardIncomplete: true, timeAllocationTargets: { ...DEFAULT_TARGETS }, cadenceItems: JSON.parse(JSON.stringify(DEFAULT_CADENCE_ITEMS)) },
     todos: [],
     weeks: {},
     opportunities: [],
@@ -310,7 +317,8 @@ function initializeWeek(state, weekKey) {
   }
   const w = state.weeks[weekKey];
   if (!w.cadence) w.cadence = {};
-  ALL_CADENCE_IDS.forEach(id => { if (w.cadence[id] === undefined) w.cadence[id] = null; });
+  const cadenceItems = (state.settings && state.settings.cadenceItems) || DEFAULT_CADENCE_ITEMS;
+  getCadenceIds(cadenceItems).forEach(id => { if (w.cadence[id] === undefined) w.cadence[id] = null; });
   if (!w.meetings) w.meetings = { customerCQ: 0, customerNQ: 0, partner: 0 };
 }
 
@@ -357,6 +365,9 @@ document.addEventListener('alpine:init', () => {
     newQuickNote: '',
     notesSearch: '',
     showSettings: false,
+    showAddCadence: false,
+    editingCadence: null,
+    newCadence: { label: '', duration: '30min', day: 'Mon', frequency: 'weekly', description: '' },
     activeNav: 'planner',
 
     // --- Computed ---
@@ -367,20 +378,24 @@ document.addEventListener('alpine:init', () => {
     },
     get viewingWeekDisplay() { return getWeekDisplayRange(this.viewingWeekKey); },
 
-    // ======= PLANNER: todos grouped by day for current viewing week =======
+    // ======= PLANNER: todos + cadence items grouped by day =======
     get weekDays() {
-      return this.viewingWeekDates.map(dateStr => ({
-        dateStr,
-        dayName: getDayName(dateStr),
-        dayDate: getDayDate(dateStr),
-        isToday: dateStr === this.today,
-        todos: this.todos
-          .filter(t => t.dueDate === dateStr && !t.completed)
-          .sort((a, b) => (PRIORITIES[a.priority]?.sort || 2) - (PRIORITIES[b.priority]?.sort || 2)),
-        completedTodos: this.todos
-          .filter(t => t.dueDate === dateStr && t.completed)
-          .sort((a, b) => (PRIORITIES[a.priority]?.sort || 2) - (PRIORITIES[b.priority]?.sort || 2)),
-      }));
+      return this.viewingWeekDates.map(dateStr => {
+        const dayAbbrev = getDayName(dateStr); // Mon, Tue, etc.
+        return {
+          dateStr,
+          dayName: dayAbbrev,
+          dayDate: getDayDate(dateStr),
+          isToday: dateStr === this.today,
+          todos: this.todos
+            .filter(t => t.dueDate === dateStr && !t.completed)
+            .sort((a, b) => (PRIORITIES[a.priority]?.sort || 2) - (PRIORITIES[b.priority]?.sort || 2)),
+          completedTodos: this.todos
+            .filter(t => t.dueDate === dateStr && t.completed)
+            .sort((a, b) => (PRIORITIES[a.priority]?.sort || 2) - (PRIORITIES[b.priority]?.sort || 2)),
+          cadenceItems: this.visibleCadenceItems.filter(i => i.day === dayAbbrev),
+        };
+      });
     },
 
     // ======= TO-DO LIST: filtered and sorted global view =======
@@ -546,31 +561,71 @@ document.addEventListener('alpine:init', () => {
       if (w) { w.meetings[type] = Math.max(0, (w.meetings[type] || 0) + delta); debouncedSave(this); }
     },
 
-    // --- Cadence (with timestamps) ---
+    // --- Cadence (customizable, with timestamps) ---
+    get cadenceItems() { return this.settings.cadenceItems || DEFAULT_CADENCE_ITEMS; },
     get currentCadence() { const w = this.weeks[this.viewingWeekKey]; return w ? w.cadence : {}; },
+
     get visibleCadenceItems() {
-      const items = [];
-      CADENCE_ITEMS.weekly.forEach(i => items.push({ ...i, frequency: 'weekly' }));
-      if (isFortnightlyWeek(this.viewingWeekKey)) CADENCE_ITEMS.fortnightly.forEach(i => items.push({ ...i, frequency: 'fortnightly' }));
-      if (isFirstWeekOfMonth(this.viewingWeekKey)) CADENCE_ITEMS.monthly.forEach(i => items.push({ ...i, frequency: 'monthly' }));
-      return items;
+      const wk = this.viewingWeekKey;
+      return this.cadenceItems.filter(i => {
+        if (i.frequency === 'weekly') return true;
+        if (i.frequency === 'fortnightly') return isFortnightlyWeek(wk);
+        if (i.frequency === 'monthly') return isFirstWeekOfMonth(wk);
+        return true;
+      });
     },
+
     get cadenceProgress() {
       const visible = this.visibleCadenceItems;
       const cadence = this.currentCadence;
       return { completed: visible.filter(i => cadence[i.id]).length, total: visible.length };
     },
+
+    cadenceItemsForDay(dayAbbrev) {
+      return this.visibleCadenceItems.filter(i => i.day === dayAbbrev);
+    },
+
     toggleCadence(itemId) {
       const w = this.weeks[this.viewingWeekKey];
       if (!w || !w.cadence) return;
-      // Toggle: null -> timestamp, timestamp -> null
       w.cadence[itemId] = w.cadence[itemId] ? null : new Date().toISOString();
       debouncedSave(this);
     },
+
     getCadenceTime(itemId) {
       const ts = this.currentCadence[itemId];
       if (!ts || typeof ts !== 'string') return null;
       return formatShortTimestamp(ts);
+    },
+
+    // Cadence CRUD
+    addCadenceItem(item) {
+      if (!item.label.trim()) return;
+      this.settings.cadenceItems.push({
+        id: generateId('cad'),
+        label: item.label.trim(),
+        duration: item.duration || '30min',
+        day: item.day || 'Mon',
+        frequency: item.frequency || 'weekly',
+        description: item.description || '',
+      });
+      debouncedSave(this);
+    },
+
+    updateCadenceItem(itemId, field, value) {
+      const item = this.settings.cadenceItems.find(i => i.id === itemId);
+      if (item) { item[field] = value; debouncedSave(this); }
+    },
+
+    deleteCadenceItem(itemId) {
+      this.settings.cadenceItems = this.settings.cadenceItems.filter(i => i.id !== itemId);
+      debouncedSave(this);
+    },
+
+    resetCadenceToDefaults() {
+      if (!confirm('Reset cadence items to handbook defaults? Your custom items will be lost.')) return;
+      this.settings.cadenceItems = JSON.parse(JSON.stringify(DEFAULT_CADENCE_ITEMS));
+      debouncedSave(this);
     },
 
     // --- Activity Tracker ---
