@@ -10,9 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body x-data x-init="$nextTick(() => {
-  setInterval(() => { $store.app.today = new Date().toISOString().split('T')[0]; }, 60000);
-})">
+<body x-data x-init="$nextTick(() => { setInterval(() => { $store.app.today = new Date().toISOString().split('T')[0]; }, 60000); })">
 
   <div class="app-layout" x-data>
 
@@ -23,27 +21,15 @@
         <span class="header-title">Personal Organiser</span>
       </div>
       <div class="header-center">
-        <button class="btn-icon" @click="$store.app.goToWeek(-1)" title="Previous week (Ctrl+←)">
-          <svg><use href="#icon-chevron-left"/></svg>
-        </button>
+        <button class="btn-icon" @click="$store.app.goToWeek(-1)" title="Previous week (Ctrl+←)"><svg><use href="#icon-chevron-left"/></svg></button>
         <span class="header-week-label" x-text="$store.app.viewingWeekDisplay"></span>
-        <button class="btn-icon" @click="$store.app.goToWeek(1)" title="Next week (Ctrl+→)">
-          <svg><use href="#icon-chevron-right"/></svg>
-        </button>
-        <button class="btn-secondary btn-sm" @click="$store.app.goToCurrentWeek()"
-                x-show="!$store.app.isViewingCurrentWeek">Today</button>
+        <button class="btn-icon" @click="$store.app.goToWeek(1)" title="Next week (Ctrl+→)"><svg><use href="#icon-chevron-right"/></svg></button>
+        <button class="btn-secondary btn-sm" @click="$store.app.goToCurrentWeek()" x-show="!$store.app.isViewingCurrentWeek">Today</button>
       </div>
       <div class="header-right">
-        <button class="btn-icon" @click="$store.app.showSettings = true" title="Settings">
-          <svg><use href="#icon-settings"/></svg>
-        </button>
-        <button class="btn-icon" @click="$store.app.exportData()" title="Export backup">
-          <svg><use href="#icon-download"/></svg>
-        </button>
-        <label class="btn-icon" title="Import backup" style="cursor:pointer">
-          <svg><use href="#icon-upload"/></svg>
-          <input type="file" accept=".json" @change="$store.app.importData($event)" class="sr-only">
-        </label>
+        <button class="btn-icon" @click="$store.app.showSettings = true" title="Settings"><svg><use href="#icon-settings"/></svg></button>
+        <button class="btn-icon" @click="$store.app.exportData()" title="Export backup"><svg><use href="#icon-download"/></svg></button>
+        <label class="btn-icon" title="Import backup" style="cursor:pointer"><svg><use href="#icon-upload"/></svg><input type="file" accept=".json" @change="$store.app.importData($event)" class="sr-only"></label>
       </div>
     </header>
 
@@ -52,6 +38,10 @@
       <nav class="sidebar-nav">
         <button class="sidebar-nav-item" :class="{ active: $store.app.activeNav === 'planner' }" @click="$store.app.scrollTo('planner')">
           <svg><use href="#icon-calendar"/></svg> Weekly Planner
+        </button>
+        <button class="sidebar-nav-item" :class="{ active: $store.app.activeNav === 'todos' }" @click="$store.app.scrollTo('todos')">
+          <svg><use href="#icon-check-square"/></svg> To-Do List
+          <span x-show="$store.app.overdueCount > 0" style="margin-left:auto; background:var(--sophos-red); color:white; font-size:0.68rem; padding:1px 6px; border-radius:8px; font-weight:600;" x-text="$store.app.overdueCount"></span>
         </button>
         <button class="sidebar-nav-item" :class="{ active: $store.app.activeNav === 'cadence' }" @click="$store.app.scrollTo('cadence')">
           <svg><use href="#icon-check-circle"/></svg> Weekly Cadence
@@ -70,73 +60,35 @@
       <!-- Meeting Tracker -->
       <div class="meeting-tracker">
         <div class="meeting-tracker-title">Meetings This Week</div>
-
-        <div class="meeting-row">
-          <span class="meeting-row-label">Customer (CQ)</span>
-          <div class="meeting-row-controls">
-            <button class="btn-meeting" @click="$store.app.adjustMeeting('customerCQ', -1)">−</button>
-            <span class="meeting-row-count"
-                  :class="$store.app.currentMeetings.customerCQ >= 7 ? 'on-target' : 'below-target'"
-                  x-text="$store.app.currentMeetings.customerCQ"></span>
-            <button class="btn-meeting" @click="$store.app.adjustMeeting('customerCQ', 1)">+</button>
-            <span class="meeting-row-target">/ 7</span>
+        <template x-for="[type, label, target] in [['customerCQ','Customer (CQ)',7],['customerNQ','Customer (NQ)',3],['partner','Partner',2]]" :key="type">
+          <div class="meeting-row">
+            <span class="meeting-row-label" x-text="label"></span>
+            <div class="meeting-row-controls">
+              <button class="btn-meeting" @click="$store.app.adjustMeeting(type, -1)">&minus;</button>
+              <span class="meeting-row-count" :class="$store.app.currentMeetings[type] >= target ? 'on-target' : 'below-target'" x-text="$store.app.currentMeetings[type]"></span>
+              <button class="btn-meeting" @click="$store.app.adjustMeeting(type, 1)">+</button>
+              <span class="meeting-row-target" x-text="'/ ' + target"></span>
+            </div>
           </div>
-        </div>
-
-        <div class="meeting-row">
-          <span class="meeting-row-label">Customer (NQ)</span>
-          <div class="meeting-row-controls">
-            <button class="btn-meeting" @click="$store.app.adjustMeeting('customerNQ', -1)">−</button>
-            <span class="meeting-row-count"
-                  :class="$store.app.currentMeetings.customerNQ >= 3 ? 'on-target' : 'below-target'"
-                  x-text="$store.app.currentMeetings.customerNQ"></span>
-            <button class="btn-meeting" @click="$store.app.adjustMeeting('customerNQ', 1)">+</button>
-            <span class="meeting-row-target">/ 3</span>
-          </div>
-        </div>
-
-        <div class="meeting-row">
-          <span class="meeting-row-label">Partner</span>
-          <div class="meeting-row-controls">
-            <button class="btn-meeting" @click="$store.app.adjustMeeting('partner', -1)">−</button>
-            <span class="meeting-row-count"
-                  :class="$store.app.currentMeetings.partner >= 2 ? 'on-target' : 'below-target'"
-                  x-text="$store.app.currentMeetings.partner"></span>
-            <button class="btn-meeting" @click="$store.app.adjustMeeting('partner', 1)">+</button>
-            <span class="meeting-row-target">/ 2</span>
-          </div>
-        </div>
-
-        <div class="meeting-summary">
-          <span>Total</span>
-          <span x-text="$store.app.totalMeetings + ' / 12'"></span>
-        </div>
+        </template>
+        <div class="meeting-summary"><span>Total</span><span x-text="$store.app.totalMeetings + ' / 12'"></span></div>
       </div>
 
       <div class="sidebar-section-title">Activity This Week</div>
-
       <div class="activity-tracker">
         <template x-for="stat in $store.app.activityStats" :key="stat.key">
           <div class="activity-bar-group">
             <div class="activity-bar-header">
               <span class="activity-bar-label" x-text="stat.label"></span>
-              <span class="activity-bar-value">
-                <span x-text="stat.count"></span>
-                <span class="text-muted" x-text="'(' + stat.pct + '%)'"></span>
-              </span>
+              <span class="activity-bar-value"><span x-text="stat.count"></span> <span class="text-muted" x-text="'(' + stat.pct + '%)'"></span></span>
             </div>
             <div class="activity-bar-track">
-              <div class="activity-bar-fill"
-                   :style="`width: ${Math.min(stat.pct, 100)}%; background-color: ${
-                     stat.status === 'critical' ? '#EA0022' :
-                     stat.status === 'below' ? '#F29400' : stat.color}`"></div>
+              <div class="activity-bar-fill" :style="`width: ${Math.min(stat.pct, 100)}%; background-color: ${stat.status === 'critical' ? '#EA0022' : stat.status === 'below' ? '#F29400' : stat.color}`"></div>
               <div class="activity-bar-target" :style="`left: ${stat.target}%`"></div>
             </div>
           </div>
         </template>
       </div>
-
-      <!-- Nudges -->
       <template x-for="(msg, idx) in $store.app.nudges" :key="idx">
         <div class="nudge-banner" x-text="msg"></div>
       </template>
@@ -144,25 +96,16 @@
 
     <!-- ============ MAIN CONTENT ============ -->
     <main class="main-content" @scroll.passive="
-      const sections = ['planner','cadence','opportunities','issues','notes'];
-      for (const id of sections) {
+      for (const id of ['planner','todos','cadence','opportunities','issues','notes']) {
         const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top < 200) $store.app.activeNav = id;
-      }
-    ">
-
-      <!-- Archive Banner -->
-      <div class="archive-banner" x-show="$store.app.isViewingArchive">
-        <span>Viewing archived week (read-only)</span>
-        <button class="btn-secondary btn-sm" @click="$store.app.goToCurrentWeek()">Return to current week</button>
-      </div>
+      }">
 
       <!-- ======== WEEKLY PLANNER ======== -->
       <section id="planner" class="section">
         <div class="section-header">
           <h2 class="section-title"><svg><use href="#icon-calendar"/></svg> Weekly Planner</h2>
         </div>
-
         <div class="planner-grid" :class="{ 'show-weekends': $store.app.settings.showWeekends }">
           <template x-for="day in $store.app.weekDays" :key="day.dateStr">
             <div class="day-column" :class="{ 'is-today': day.isToday }" :data-day="day.dateStr">
@@ -170,84 +113,222 @@
                 <span class="day-name" x-text="day.dayName"></span>
                 <span class="day-date" x-text="day.dayDate"></span>
               </div>
-
-              <div class="day-todos" :data-day-key="day.dateStr"
-                   x-init="$nextTick(() => initSortable($el, day.dateStr))">
+              <div class="day-todos" :data-day-key="day.dateStr" x-init="$nextTick(() => initSortable($el, day.dateStr))">
                 <template x-for="todo in day.todos" :key="todo.id">
-                  <div class="todo-card" :class="{ 'is-completed': todo.completed }" :data-todo-id="todo.id">
+                  <div class="todo-card" :data-todo-id="todo.id">
                     <div class="todo-card-main">
-                      <button class="todo-checkbox" :class="{ checked: todo.completed }"
-                              @click.stop="$store.app.toggleTodo(day.dateStr, todo.id)"
-                              :disabled="$store.app.isViewingArchive">
-                        <svg x-show="todo.completed" width="10" height="10" viewBox="0 0 10 10">
-                          <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/>
-                        </svg>
+                      <button class="todo-checkbox" :class="{ checked: todo.completed }" @click.stop="$store.app.toggleTodoComplete(todo.id)">
+                        <svg x-show="todo.completed" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
                       </button>
-                      <div class="todo-content" @click="$store.app.toggleExpandTodo(todo.id)">
+                      <div class="todo-content">
                         <div class="todo-title" x-text="todo.title"></div>
                         <div class="todo-meta">
-                          <span class="pill pill-category"
-                                :style="`background-color: ${CATEGORIES[todo.category]?.color || '#6A889B'}`"
-                                x-text="CATEGORIES[todo.category]?.label || todo.category"></span>
-                          <span class="priority-dot" :class="todo.priority"></span>
+                          <span class="pill pill-category" :style="`background-color: ${CATEGORIES[todo.category]?.color || '#6A889B'}`" x-text="CATEGORIES[todo.category]?.label || todo.category"></span>
+                          <span class="priority-dot" :class="todo.priority" :style="`background-color: ${PRIORITIES[todo.priority]?.color || '#009CFB'}`"></span>
+                          <span class="todo-recurrence-badge" x-show="todo.recurrence && todo.recurrence !== 'none'" x-text="$store.app.getRecurrenceLabel(todo)">
+                          </span>
                         </div>
-                      </div>
-                    </div>
-                    <div class="todo-expanded" x-show="$store.app.expandedTodo === todo.id" x-transition.opacity>
-                      <textarea placeholder="Notes..." :value="todo.notes"
-                                @input="$store.app.updateTodoNotes(day.dateStr, todo.id, $event.target.value)"
-                                :disabled="$store.app.isViewingArchive"></textarea>
-                      <div class="todo-actions" x-show="!$store.app.isViewingArchive">
-                        <select :value="todo.category" @change="$store.app.updateTodoCategory(day.dateStr, todo.id, $event.target.value)">
-                          <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
-                            <option :value="key" x-text="cat.label" :selected="key === todo.category"></option>
-                          </template>
-                        </select>
-                        <select :value="todo.priority" @change="$store.app.updateTodoPriority(day.dateStr, todo.id, $event.target.value)">
-                          <option value="high">High</option>
-                          <option value="medium">Medium</option>
-                          <option value="low">Low</option>
-                        </select>
-                        <button class="btn-delete-todo" @click="$store.app.deleteTodo(day.dateStr, todo.id)">Delete</button>
                       </div>
                     </div>
                   </div>
                 </template>
               </div>
-
-              <div x-show="!$store.app.isViewingArchive">
-                <div class="day-add-btn" x-show="$store.app.addingTodoDay !== day.dateStr">
-                  <button class="btn-add-todo" @click="$store.app.startAddTodo(day.dateStr)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg> Add
+              <!-- Completed todos (collapsible) -->
+              <template x-if="day.completedTodos.length > 0">
+                <div x-data="{ showCompleted: false }">
+                  <button class="day-completed-toggle" @click="showCompleted = !showCompleted">
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline :points="showCompleted ? '6 9 12 15 18 9' : '9 6 15 12 9 18'"/></svg>
+                    <span x-text="day.completedTodos.length + ' completed'"></span>
                   </button>
-                </div>
-                <div class="add-todo-form" x-show="$store.app.addingTodoDay === day.dateStr" x-transition.opacity>
-                  <input type="text" class="add-todo-input" placeholder="Task title..."
-                         x-model="$store.app.newTodo.title"
-                         @keydown.enter="$store.app.submitTodo(day.dateStr)"
-                         @keydown.escape="$store.app.cancelAddTodo()">
-                  <div class="add-todo-form-row">
-                    <select x-model="$store.app.newTodo.category">
-                      <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
-                        <option :value="key" x-text="cat.label"></option>
-                      </template>
-                    </select>
-                    <select x-model="$store.app.newTodo.priority">
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                  <div class="add-todo-form-actions mt-sm">
-                    <button class="btn-primary btn-sm" @click="$store.app.submitTodo(day.dateStr)">Add</button>
-                    <button class="btn-secondary btn-sm" @click="$store.app.cancelAddTodo()">Cancel</button>
+                  <div class="day-todos" x-show="showCompleted" style="padding-top:0;">
+                    <template x-for="todo in day.completedTodos" :key="todo.id">
+                      <div class="todo-card is-completed" :data-todo-id="todo.id">
+                        <div class="todo-card-main">
+                          <button class="todo-checkbox checked" @click.stop="$store.app.toggleTodoComplete(todo.id)">
+                            <svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
+                          </button>
+                          <div class="todo-content"><div class="todo-title" x-text="todo.title"></div></div>
+                        </div>
+                      </div>
+                    </template>
                   </div>
                 </div>
+              </template>
+              <div class="day-add-btn">
+                <button class="btn-add-todo" @click="$store.app.quickAddTodo(day.dateStr)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add
+                </button>
               </div>
             </div>
           </template>
+        </div>
+      </section>
+
+      <!-- ======== TO-DO LIST ======== -->
+      <section id="todos" class="section todo-list-section">
+        <div class="section-header">
+          <h2 class="section-title"><svg><use href="#icon-check-square"/></svg> To-Do List</h2>
+          <button class="btn-primary btn-sm" @click="$store.app.showAddTodo = !$store.app.showAddTodo">
+            <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add To-Do
+          </button>
+        </div>
+
+        <!-- Add Form -->
+        <div class="add-form-panel" x-show="$store.app.showAddTodo" x-transition.opacity>
+          <div class="add-form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">Title</label>
+              <input type="text" x-model="$store.app.newTodo.title" placeholder="What needs to be done?" @keydown.enter="$store.app.submitNewTodo()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Due Date</label>
+              <input type="date" x-model="$store.app.newTodo.dueDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select x-model="$store.app.newTodo.priority">
+                <template x-for="[key, p] in Object.entries(PRIORITIES)" :key="key">
+                  <option :value="key" x-text="p.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select x-model="$store.app.newTodo.category">
+                <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
+                  <option :value="key" x-text="cat.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Repeat</label>
+              <select x-model="$store.app.newTodo.recurrence">
+                <template x-for="[key, r] in Object.entries(RECURRENCE_OPTIONS)" :key="key">
+                  <option :value="key" x-text="r.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="form-group" x-show="$store.app.newTodo.recurrence === 'custom'">
+              <label class="form-label">Every X days</label>
+              <input type="number" x-model="$store.app.newTodo.customDays" placeholder="e.g. 14" min="1">
+            </div>
+          </div>
+          <div class="add-form-actions">
+            <button class="btn-primary" @click="$store.app.submitNewTodo()">Add To-Do</button>
+            <button class="btn-secondary" @click="$store.app.showAddTodo = false">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Filters & Sort -->
+        <div class="todo-list-toolbar">
+          <template x-for="[key, label] in [['active','Active'],['today','Today'],['overdue','Overdue'],['completed','Completed'],['all','All']]" :key="key">
+            <button class="todo-filter-btn" :class="{ active: $store.app.todoFilter === key }" @click="$store.app.todoFilter = key">
+              <span x-text="label"></span>
+              <span class="badge" :class="{ warn: key === 'overdue' && $store.app.overdueCount > 0 }"
+                    x-show="key === 'overdue' && $store.app.overdueCount > 0" x-text="$store.app.overdueCount"></span>
+              <span class="badge" x-show="key === 'today'" x-text="$store.app.todayCount"></span>
+            </button>
+          </template>
+          <div class="sort-controls">
+            <select x-model="$store.app.todoSort" style="font-size:0.8rem;padding:4px 8px;">
+              <option value="dueDate">Due Date</option>
+              <option value="priority">Priority</option>
+              <option value="category">Category</option>
+              <option value="title">Title</option>
+            </select>
+            <button class="btn-icon" @click="$store.app.todoSortAsc = !$store.app.todoSortAsc">
+              <svg x-show="$store.app.todoSortAsc"><use href="#icon-arrow-up"/></svg>
+              <svg x-show="!$store.app.todoSortAsc"><use href="#icon-arrow-down"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- To-Do Items -->
+        <template x-for="todo in $store.app.filteredTodos" :key="todo.id">
+          <div class="todo-list-item"
+               :class="{ 'is-completed': todo.completed, 'is-overdue': !todo.completed && todo.dueDate < $store.app.today, 'is-today-due': !todo.completed && todo.dueDate === $store.app.today }">
+            <div class="todo-list-main" @click="$store.app.toggleExpandTodo(todo.id)">
+              <button class="todo-checkbox" :class="{ checked: todo.completed }" @click.stop="$store.app.toggleTodoComplete(todo.id)">
+                <svg x-show="todo.completed" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
+              </button>
+              <div class="todo-list-content">
+                <div class="todo-list-title" x-text="todo.title"></div>
+                <div class="todo-list-meta">
+                  <span class="priority-pill" :style="`background-color: ${PRIORITIES[todo.priority]?.color || '#009CFB'}`" x-text="PRIORITIES[todo.priority]?.label || todo.priority"></span>
+                  <span class="pill pill-category" :style="`background-color: ${CATEGORIES[todo.category]?.color || '#6A889B'}`" x-text="CATEGORIES[todo.category]?.label || todo.category"></span>
+                  <span class="todo-due-badge" :class="{ overdue: todo.dueDate < $store.app.today && !todo.completed, today: todo.dueDate === $store.app.today }"
+                        x-text="todo.dueDate === $store.app.today ? 'Today' : (todo.dueDate < $store.app.today && !todo.completed ? Math.abs(daysBetween(todo.dueDate, $store.app.today)) + 'd overdue' : getDayName(todo.dueDate) + ' ' + getDayDate(todo.dueDate) + ' ' + parseDate(todo.dueDate).toLocaleDateString('en-AU', {month:'short'}))"></span>
+                  <span class="todo-recurrence-badge" x-show="todo.recurrence && todo.recurrence !== 'none'">
+                    <svg viewBox="0 0 24 24"><use href="#icon-repeat"/></svg>
+                    <span x-text="$store.app.getRecurrenceLabel(todo)"></span>
+                  </span>
+                  <span class="text-muted" style="font-size:0.68rem;" x-show="todo.notes && todo.notes.length > 0" x-text="todo.notes.length + ' note' + (todo.notes.length > 1 ? 's' : '')"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expanded Detail -->
+            <div class="todo-list-expanded" x-show="$store.app.expandedTodo === todo.id" x-transition.opacity>
+              <div class="todo-detail-grid">
+                <div class="form-group">
+                  <label class="form-label">Due Date</label>
+                  <input type="date" :value="todo.dueDate" @change="$store.app.updateTodoField(todo.id, 'dueDate', $event.target.value)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Priority</label>
+                  <select :value="todo.priority" @change="$store.app.updateTodoField(todo.id, 'priority', $event.target.value)">
+                    <template x-for="[key, p] in Object.entries(PRIORITIES)" :key="key">
+                      <option :value="key" x-text="p.label" :selected="key === todo.priority"></option>
+                    </template>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select :value="todo.category" @change="$store.app.updateTodoField(todo.id, 'category', $event.target.value)">
+                    <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
+                      <option :value="key" x-text="cat.label" :selected="key === todo.category"></option>
+                    </template>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Repeat</label>
+                  <select :value="todo.recurrence" @change="$store.app.updateTodoField(todo.id, 'recurrence', $event.target.value)">
+                    <template x-for="[key, r] in Object.entries(RECURRENCE_OPTIONS)" :key="key">
+                      <option :value="key" x-text="r.label" :selected="key === todo.recurrence"></option>
+                    </template>
+                  </select>
+                </div>
+                <div class="form-group" x-show="todo.recurrence === 'custom'">
+                  <label class="form-label">Every X days</label>
+                  <input type="number" :value="todo.customDays" @change="$store.app.updateTodoField(todo.id, 'customDays', $event.target.value)" min="1">
+                </div>
+              </div>
+
+              <!-- Notes Timeline -->
+              <div class="todo-notes-timeline">
+                <template x-for="note in (todo.notes || [])" :key="note.id">
+                  <div class="todo-note-entry">
+                    <div class="todo-note-ts" x-text="formatTimestamp(note.timestamp)"></div>
+                    <div class="todo-note-text" x-text="note.text"></div>
+                  </div>
+                </template>
+                <div class="todo-add-note-row">
+                  <input type="text" placeholder="Add a note..." x-model="$store.app.todoNoteText" @keydown.enter="$store.app.addTodoNote(todo.id)">
+                  <button class="btn-primary btn-sm" @click="$store.app.addTodoNote(todo.id)">Add</button>
+                </div>
+              </div>
+
+              <div class="todo-list-actions">
+                <button class="btn-danger btn-sm" @click="$store.app.deleteTodo(todo.id)">Delete</button>
+                <span class="text-muted" style="font-size:0.72rem; margin-left:auto;" x-show="todo.completedAt" x-text="'Completed ' + formatTimestamp(todo.completedAt)"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <div class="empty-state" x-show="$store.app.filteredTodos.length === 0">
+          <svg viewBox="0 0 24 24"><use href="#icon-check-square"/></svg>
+          <div x-text="$store.app.todoFilter === 'completed' ? 'No completed tasks yet.' : $store.app.todoFilter === 'overdue' ? 'No overdue tasks. Nice work.' : 'No tasks to show. Add one above.'"></div>
         </div>
       </section>
 
@@ -261,43 +342,37 @@
           </span>
         </div>
 
-        <!-- Weekly items -->
         <div class="cadence-group-title">Weekly</div>
         <template x-for="item in CADENCE_ITEMS.weekly" :key="item.id">
-          <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }"
-               @click="$store.app.toggleCadence(item.id)">
+          <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }" @click="$store.app.toggleCadence(item.id)">
             <div class="cadence-check" :class="{ checked: $store.app.currentCadence[item.id] }">
-              <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10">
-                <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/>
-              </svg>
+              <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
             </div>
             <div class="cadence-item-content">
               <div class="cadence-item-header">
                 <span x-text="item.label"></span>
                 <span class="cadence-duration" x-text="item.duration"></span>
                 <span class="cadence-day-badge" x-text="item.day"></span>
+                <span class="cadence-timestamp" x-show="$store.app.getCadenceTime(item.id)" x-text="$store.app.getCadenceTime(item.id)"></span>
               </div>
               <div class="cadence-item-desc" x-text="item.description"></div>
             </div>
           </div>
         </template>
 
-        <!-- Fortnightly items (shown on even weeks) -->
         <template x-if="$store.app.visibleCadenceItems.some(i => i.frequency === 'fortnightly')">
           <div>
             <div class="cadence-group-title">Fortnightly</div>
             <template x-for="item in CADENCE_ITEMS.fortnightly" :key="item.id">
-              <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }"
-                   @click="$store.app.toggleCadence(item.id)">
+              <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }" @click="$store.app.toggleCadence(item.id)">
                 <div class="cadence-check" :class="{ checked: $store.app.currentCadence[item.id] }">
-                  <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10">
-                    <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/>
-                  </svg>
+                  <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
                 </div>
                 <div class="cadence-item-content">
                   <div class="cadence-item-header">
                     <span x-text="item.label"></span>
                     <span class="cadence-duration" x-text="item.duration"></span>
+                    <span class="cadence-timestamp" x-show="$store.app.getCadenceTime(item.id)" x-text="$store.app.getCadenceTime(item.id)"></span>
                   </div>
                   <div class="cadence-item-desc" x-text="item.description"></div>
                 </div>
@@ -306,22 +381,19 @@
           </div>
         </template>
 
-        <!-- Monthly items (shown first week of month) -->
         <template x-if="$store.app.visibleCadenceItems.some(i => i.frequency === 'monthly')">
           <div>
             <div class="cadence-group-title">Monthly</div>
             <template x-for="item in CADENCE_ITEMS.monthly" :key="item.id">
-              <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }"
-                   @click="$store.app.toggleCadence(item.id)">
+              <div class="cadence-item" :class="{ completed: $store.app.currentCadence[item.id] }" @click="$store.app.toggleCadence(item.id)">
                 <div class="cadence-check" :class="{ checked: $store.app.currentCadence[item.id] }">
-                  <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10">
-                    <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/>
-                  </svg>
+                  <svg x-show="$store.app.currentCadence[item.id]" width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none"/></svg>
                 </div>
                 <div class="cadence-item-content">
                   <div class="cadence-item-header">
                     <span x-text="item.label"></span>
                     <span class="cadence-duration" x-text="item.duration"></span>
+                    <span class="cadence-timestamp" x-show="$store.app.getCadenceTime(item.id)" x-text="$store.app.getCadenceTime(item.id)"></span>
                   </div>
                   <div class="cadence-item-desc" x-text="item.description"></div>
                 </div>
@@ -336,381 +408,164 @@
         <div class="section-header">
           <h2 class="section-title"><svg><use href="#icon-target"/></svg> Opportunities</h2>
           <button class="btn-primary btn-sm" @click="$store.app.showAddOpp = !$store.app.showAddOpp">
-            <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg> Add Opportunity
+            <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Opportunity
           </button>
         </div>
-
-        <!-- Add Opp Form -->
         <div class="add-form-panel" x-show="$store.app.showAddOpp" x-transition.opacity>
           <div class="add-form-grid">
-            <div class="form-group">
-              <label class="form-label">Account Name</label>
-              <input type="text" x-model="$store.app.newOpp.accountName" placeholder="e.g. Acme Corporation">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Deal Size (USD)</label>
-              <input type="number" x-model="$store.app.newOpp.dealSize" placeholder="e.g. 50000">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Type</label>
-              <select x-model="$store.app.newOpp.type">
-                <option value="newLogo">New Logo</option>
-                <option value="expansion">Expansion</option>
-                <option value="renewal">Renewal</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Stage</label>
-              <select x-model="$store.app.newOpp.stage">
-                <option value="">Select stage...</option>
-                <template x-for="stage in OPP_STAGES" :key="stage">
-                  <option :value="stage" x-text="stage"></option>
-                </template>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Expected Close Date</label>
-              <input type="date" x-model="$store.app.newOpp.expectedCloseDate">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Salesforce Link</label>
-              <input type="url" x-model="$store.app.newOpp.salesforceLink" placeholder="https://sophos.my.salesforce.com/...">
-            </div>
-            <div class="form-group full-width">
-              <label class="form-label">Notes</label>
-              <textarea x-model="$store.app.newOpp.notes" placeholder="Key contacts, next steps, etc."></textarea>
-            </div>
+            <div class="form-group"><label class="form-label">Account Name</label><input type="text" x-model="$store.app.newOpp.accountName" placeholder="e.g. Acme Corporation"></div>
+            <div class="form-group"><label class="form-label">Deal Size (USD)</label><input type="number" x-model="$store.app.newOpp.dealSize" placeholder="e.g. 50000"></div>
+            <div class="form-group"><label class="form-label">Type</label><select x-model="$store.app.newOpp.type"><option value="newLogo">New Logo</option><option value="expansion">Expansion</option><option value="renewal">Renewal</option></select></div>
+            <div class="form-group"><label class="form-label">Stage</label><select x-model="$store.app.newOpp.stage"><option value="">Select stage...</option><template x-for="stage in OPP_STAGES" :key="stage"><option :value="stage" x-text="stage"></option></template></select></div>
+            <div class="form-group"><label class="form-label">Expected Close Date</label><input type="date" x-model="$store.app.newOpp.expectedCloseDate"></div>
+            <div class="form-group"><label class="form-label">Salesforce Link</label><input type="url" x-model="$store.app.newOpp.salesforceLink" placeholder="https://sophos.my.salesforce.com/..."></div>
+            <div class="form-group full-width"><label class="form-label">Notes</label><textarea x-model="$store.app.newOpp.notes" placeholder="Key contacts, next steps, etc."></textarea></div>
           </div>
-          <div class="add-form-actions">
-            <button class="btn-primary" @click="$store.app.submitOpportunity()">Save Opportunity</button>
-            <button class="btn-secondary" @click="$store.app.showAddOpp = false">Cancel</button>
-          </div>
+          <div class="add-form-actions"><button class="btn-primary" @click="$store.app.submitOpportunity()">Save Opportunity</button><button class="btn-secondary" @click="$store.app.showAddOpp = false">Cancel</button></div>
         </div>
-
-        <!-- Filter & Sort -->
         <div class="filter-bar">
           <template x-for="[type, label] in [['all','All'],['newLogo','New Logo'],['expansion','Expansion'],['renewal','Renewal']]" :key="type">
-            <button class="filter-btn" :class="{ active: $store.app.oppFilter === type }" @click="$store.app.oppFilter = type">
-              <span x-text="label"></span>
-              <span class="count-badge" x-text="$store.app.oppCountByType(type)"></span>
-            </button>
+            <button class="filter-btn" :class="{ active: $store.app.oppFilter === type }" @click="$store.app.oppFilter = type"><span x-text="label"></span><span class="count-badge" x-text="$store.app.oppCountByType(type)"></span></button>
           </template>
           <div class="sort-controls">
-            <select x-model="$store.app.oppSort">
-              <option value="expectedCloseDate">Close Date</option>
-              <option value="dealSize">Deal Size</option>
-              <option value="priority">Priority</option>
-              <option value="accountName">Account</option>
-            </select>
-            <button class="btn-icon" @click="$store.app.oppSortAsc = !$store.app.oppSortAsc">
-              <svg x-show="$store.app.oppSortAsc"><use href="#icon-arrow-up"/></svg>
-              <svg x-show="!$store.app.oppSortAsc"><use href="#icon-arrow-down"/></svg>
-            </button>
+            <select x-model="$store.app.oppSort"><option value="expectedCloseDate">Close Date</option><option value="dealSize">Deal Size</option><option value="priority">Priority</option><option value="accountName">Account</option></select>
+            <button class="btn-icon" @click="$store.app.oppSortAsc = !$store.app.oppSortAsc"><svg x-show="$store.app.oppSortAsc"><use href="#icon-arrow-up"/></svg><svg x-show="!$store.app.oppSortAsc"><use href="#icon-arrow-down"/></svg></button>
           </div>
         </div>
-
-        <!-- Opportunity Cards -->
         <template x-for="opp in $store.app.filteredOpportunities" :key="opp.id">
           <div class="opp-card">
             <div class="opp-card-inner">
               <div class="opp-type-stripe" :style="`background-color: ${OPP_TYPES[opp.type]?.color || '#6A889B'}`"></div>
               <div class="opp-card-body">
-                <div class="opp-card-top">
-                  <span class="opp-account" x-text="opp.accountName"></span>
-                  <span class="opp-deal-size" x-text="formatCurrency(opp.dealSize)"></span>
-                </div>
+                <div class="opp-card-top"><span class="opp-account" x-text="opp.accountName"></span><span class="opp-deal-size" x-text="formatCurrency(opp.dealSize)"></span></div>
                 <div class="opp-card-details">
-                  <span class="opp-type-badge" :style="`background-color: ${OPP_TYPES[opp.type]?.color || '#6A889B'}`"
-                        x-text="OPP_TYPES[opp.type]?.label || opp.type"></span>
+                  <span class="opp-type-badge" :style="`background-color: ${OPP_TYPES[opp.type]?.color || '#6A889B'}`" x-text="OPP_TYPES[opp.type]?.label || opp.type"></span>
                   <span class="opp-stage" x-text="opp.stage" x-show="opp.stage"></span>
                   <span class="opp-close-date" :class="$store.app.getOppUrgency(opp)" x-show="opp.expectedCloseDate">
-                    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                    </svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     <span x-text="(() => { const d = $store.app.getOppCloseDaysLeft(opp); if (d === null) return ''; if (d < 0) return Math.abs(d) + 'd overdue'; if (d === 0) return 'Today'; return d + 'd left'; })()"></span>
                   </span>
-                  <!-- MEDDPICC badge for deals >= $30K -->
-                  <span class="meddpicc-score"
-                        x-show="opp.dealSize >= 30000"
-                        :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }"
-                        x-text="'MEDDPICC ' + $store.app.getMeddpiccScore(opp) + '/8'"></span>
+                  <span class="meddpicc-score" x-show="opp.dealSize >= 30000" :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }" x-text="'MEDDPICC ' + $store.app.getMeddpiccScore(opp) + '/8'"></span>
                   <div class="opp-card-actions">
-                    <button class="opp-priority-flag" :class="{ flagged: opp.priority }"
-                            @click="$store.app.toggleOppPriority(opp.id)" title="Toggle priority">
-                      <svg viewBox="0 0 24 24"><use href="#icon-flag"/></svg>
-                    </button>
-                    <a :href="opp.salesforceLink" target="_blank" rel="noopener" class="opp-sf-link"
-                       x-show="opp.salesforceLink" title="Open in Salesforce">
-                      <svg viewBox="0 0 24 24"><use href="#icon-external-link"/></svg> SFDC
-                    </a>
-                    <button class="btn-icon" @click="$store.app.toggleExpandOpp(opp.id)" title="Expand">
-                      <svg><use href="#icon-chevron-down"/></svg>
-                    </button>
+                    <button class="opp-priority-flag" :class="{ flagged: opp.priority }" @click="$store.app.toggleOppPriority(opp.id)" title="Toggle priority"><svg viewBox="0 0 24 24"><use href="#icon-flag"/></svg></button>
+                    <a :href="opp.salesforceLink" target="_blank" rel="noopener" class="opp-sf-link" x-show="opp.salesforceLink" title="Open in Salesforce"><svg viewBox="0 0 24 24"><use href="#icon-external-link"/></svg> SFDC</a>
+                    <button class="btn-icon" @click="$store.app.toggleExpandOpp(opp.id)"><svg><use href="#icon-chevron-down"/></svg></button>
                   </div>
                 </div>
               </div>
             </div>
-            <!-- Expanded -->
             <div class="opp-expanded" x-show="$store.app.expandedOpp === opp.id" x-transition.opacity>
-              <div class="add-form-grid" style="margin-bottom: 8px;">
-                <div class="form-group">
-                  <label class="form-label">Stage</label>
-                  <select :value="opp.stage" @change="$store.app.updateOppField(opp.id, 'stage', $event.target.value)">
-                    <option value="">Select stage...</option>
-                    <template x-for="stage in OPP_STAGES" :key="stage">
-                      <option :value="stage" x-text="stage" :selected="stage === opp.stage"></option>
-                    </template>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Deal Size</label>
-                  <input type="number" :value="opp.dealSize" @change="$store.app.updateOppField(opp.id, 'dealSize', $event.target.value)">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Close Date</label>
-                  <input type="date" :value="opp.expectedCloseDate" @change="$store.app.updateOppField(opp.id, 'expectedCloseDate', $event.target.value)">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Type</label>
-                  <select :value="opp.type" @change="$store.app.updateOppField(opp.id, 'type', $event.target.value)">
-                    <option value="newLogo">New Logo</option>
-                    <option value="expansion">Expansion</option>
-                    <option value="renewal">Renewal</option>
-                  </select>
-                </div>
+              <div class="add-form-grid" style="margin-bottom:8px;">
+                <div class="form-group"><label class="form-label">Stage</label><select :value="opp.stage" @change="$store.app.updateOppField(opp.id, 'stage', $event.target.value)"><option value="">Select...</option><template x-for="stage in OPP_STAGES" :key="stage"><option :value="stage" x-text="stage" :selected="stage === opp.stage"></option></template></select></div>
+                <div class="form-group"><label class="form-label">Deal Size</label><input type="number" :value="opp.dealSize" @change="$store.app.updateOppField(opp.id, 'dealSize', $event.target.value)"></div>
+                <div class="form-group"><label class="form-label">Close Date</label><input type="date" :value="opp.expectedCloseDate" @change="$store.app.updateOppField(opp.id, 'expectedCloseDate', $event.target.value)"></div>
+                <div class="form-group"><label class="form-label">Type</label><select :value="opp.type" @change="$store.app.updateOppField(opp.id, 'type', $event.target.value)"><option value="newLogo">New Logo</option><option value="expansion">Expansion</option><option value="renewal">Renewal</option></select></div>
               </div>
-              <div class="form-group" style="margin-bottom: 8px;">
-                <label class="form-label">Notes</label>
-                <textarea :value="opp.notes" @input="$store.app.updateOppNotes(opp.id, $event.target.value)"
-                          placeholder="Key contacts, next steps, blockers..."></textarea>
-              </div>
-              <!-- MEDDPICC (for deals $30K+ ACV) -->
+              <div class="form-group" style="margin-bottom:8px;"><label class="form-label">Notes</label><textarea :value="opp.notes" @input="$store.app.updateOppNotes(opp.id, $event.target.value)" placeholder="Key contacts, next steps..."></textarea></div>
               <div class="meddpicc-section" x-show="opp.dealSize >= 30000">
-                <div class="meddpicc-title">
-                  MEDDPICC Qualification
-                  <span class="meddpicc-score"
-                        :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }"
-                        x-text="$store.app.getMeddpiccScore(opp) + ' / 8'"></span>
-                </div>
-                <div class="meddpicc-grid">
-                  <template x-for="field in MEDDPICC_FIELDS" :key="field.key">
-                    <div class="meddpicc-field">
-                      <label x-text="field.label"></label>
-                      <input type="text" :placeholder="field.hint"
-                             :value="opp.meddpicc ? opp.meddpicc[field.key] : ''"
-                             @input="$store.app.updateMeddpicc(opp.id, field.key, $event.target.value)">
-                    </div>
-                  </template>
-                </div>
+                <div class="meddpicc-title">MEDDPICC Qualification <span class="meddpicc-score" :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }" x-text="$store.app.getMeddpiccScore(opp) + ' / 8'"></span></div>
+                <div class="meddpicc-grid"><template x-for="field in MEDDPICC_FIELDS" :key="field.key"><div class="meddpicc-field"><label x-text="field.label"></label><input type="text" :placeholder="field.hint" :value="opp.meddpicc ? opp.meddpicc[field.key] : ''" @input="$store.app.updateMeddpicc(opp.id, field.key, $event.target.value)"></div></template></div>
               </div>
-              <div style="display:flex; gap:8px; margin-top:8px;">
-                <button class="btn-danger btn-sm" @click="$store.app.archiveOpportunity(opp.id)">Archive Deal</button>
-              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-danger btn-sm" @click="$store.app.archiveOpportunity(opp.id)">Archive Deal</button></div>
             </div>
           </div>
         </template>
-
-        <div class="empty-state" x-show="$store.app.filteredOpportunities.length === 0">
-          <svg viewBox="0 0 24 24"><use href="#icon-target"/></svg>
-          <div>No opportunities to show. Add your priority deals above.</div>
-        </div>
+        <div class="empty-state" x-show="$store.app.filteredOpportunities.length === 0"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg><div>No opportunities to show.</div></div>
       </section>
 
-      <!-- ======== ISSUES / WATCH LIST ======== -->
+      <!-- ======== ISSUES ======== -->
       <section id="issues" class="section">
         <div class="section-header">
           <h2 class="section-title"><svg><use href="#icon-alert-circle"/></svg> Watch List</h2>
-          <button class="btn-primary btn-sm" @click="$store.app.showAddIssue = !$store.app.showAddIssue">
-            <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg> Add Issue
-          </button>
+          <button class="btn-primary btn-sm" @click="$store.app.showAddIssue = !$store.app.showAddIssue"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Issue</button>
         </div>
-
         <div class="add-form-panel" x-show="$store.app.showAddIssue" x-transition.opacity>
           <div class="add-form-grid">
-            <div class="form-group">
-              <label class="form-label">Title</label>
-              <input type="text" x-model="$store.app.newIssue.title" placeholder="e.g. Firewall firmware issue">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Account</label>
-              <input type="text" x-model="$store.app.newIssue.account" placeholder="Customer name">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Type</label>
-              <select x-model="$store.app.newIssue.type">
-                <option value="supportCase">Support Case</option>
-                <option value="customerPainPoint">Customer Pain Point</option>
-                <option value="escalation">Escalation</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Link (optional)</label>
-              <input type="url" x-model="$store.app.newIssue.link" placeholder="https://support.sophos.com/...">
-            </div>
-            <div class="form-group full-width">
-              <label class="form-label">Initial Note (optional)</label>
-              <textarea x-model="$store.app.newIssue.notes" placeholder="Context, details..."></textarea>
-            </div>
+            <div class="form-group"><label class="form-label">Title</label><input type="text" x-model="$store.app.newIssue.title" placeholder="e.g. Firewall firmware issue"></div>
+            <div class="form-group"><label class="form-label">Account</label><input type="text" x-model="$store.app.newIssue.account" placeholder="Customer name"></div>
+            <div class="form-group"><label class="form-label">Type</label><select x-model="$store.app.newIssue.type"><option value="supportCase">Support Case</option><option value="customerPainPoint">Customer Pain Point</option><option value="escalation">Escalation</option><option value="other">Other</option></select></div>
+            <div class="form-group"><label class="form-label">Link (optional)</label><input type="url" x-model="$store.app.newIssue.link" placeholder="https://support.sophos.com/..."></div>
+            <div class="form-group full-width"><label class="form-label">Initial Note</label><textarea x-model="$store.app.newIssue.notes" placeholder="Context, details..."></textarea></div>
           </div>
-          <div class="add-form-actions">
-            <button class="btn-primary" @click="$store.app.submitIssue()">Save Issue</button>
-            <button class="btn-secondary" @click="$store.app.showAddIssue = false">Cancel</button>
-          </div>
+          <div class="add-form-actions"><button class="btn-primary" @click="$store.app.submitIssue()">Save Issue</button><button class="btn-secondary" @click="$store.app.showAddIssue = false">Cancel</button></div>
         </div>
-
         <div class="status-tabs">
           <template x-for="[status, label] in [['open','Open'],['inProgress','In Progress'],['resolved','Resolved'],['all','All']]" :key="status">
-            <button class="status-tab" :class="{ active: $store.app.issueFilter === status }"
-                    @click="$store.app.issueFilter = status" x-text="label"></button>
+            <button class="status-tab" :class="{ active: $store.app.issueFilter === status }" @click="$store.app.issueFilter = status" x-text="label"></button>
           </template>
         </div>
-
         <template x-for="issue in $store.app.filteredIssues" :key="issue.id">
           <div class="issue-card">
             <div class="issue-card-body" @click="$store.app.toggleExpandIssue(issue.id)" style="cursor:pointer">
               <div class="issue-card-top">
-                <div class="issue-type-icon" :class="issue.type">
-                  <svg viewBox="0 0 24 24"><use :href="'#icon-' + (ISSUE_TYPES[issue.type]?.icon || 'circle')"/></svg>
-                </div>
-                <div style="flex:1">
-                  <div class="issue-title" x-text="issue.title"></div>
-                  <div class="issue-account" x-text="issue.account" x-show="issue.account"></div>
-                </div>
+                <div class="issue-type-icon" :class="issue.type"><svg viewBox="0 0 24 24"><use :href="'#icon-' + (ISSUE_TYPES[issue.type]?.icon || 'circle')"/></svg></div>
+                <div style="flex:1"><div class="issue-title" x-text="issue.title"></div><div class="issue-account" x-text="issue.account" x-show="issue.account"></div></div>
                 <div class="issue-meta">
-                  <span class="status-pill" :class="issue.status"
-                        x-text="issue.status === 'inProgress' ? 'In Progress' : issue.status.charAt(0).toUpperCase() + issue.status.slice(1)"></span>
+                  <span class="status-pill" :class="issue.status" x-text="issue.status === 'inProgress' ? 'In Progress' : issue.status.charAt(0).toUpperCase() + issue.status.slice(1)"></span>
                   <span class="days-open-badge" x-text="$store.app.getIssueDaysOpen(issue) + 'd'"></span>
-                  <a :href="issue.link" target="_blank" rel="noopener" x-show="issue.link" @click.stop
-                     class="btn-icon" title="Open link"><svg><use href="#icon-external-link"/></svg></a>
+                  <a :href="issue.link" target="_blank" rel="noopener" x-show="issue.link" @click.stop class="btn-icon"><svg><use href="#icon-external-link"/></svg></a>
                 </div>
               </div>
             </div>
             <div class="issue-notes" x-show="$store.app.expandedIssue === issue.id" x-transition.opacity>
-              <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-                <span class="form-label" style="margin:0;">Status:</span>
-                <select :value="issue.status" @change="$store.app.updateIssueStatus(issue.id, $event.target.value)"
-                        style="font-size:0.82rem; padding:3px 6px;">
-                  <option value="open">Open</option>
-                  <option value="inProgress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                </select>
-                <button class="btn-danger btn-sm" style="margin-left:auto;" @click="$store.app.deleteIssue(issue.id)">Remove</button>
+              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+                <span class="form-label" style="margin:0">Status:</span>
+                <select :value="issue.status" @change="$store.app.updateIssueStatus(issue.id, $event.target.value)" style="font-size:0.82rem;padding:3px 6px;"><option value="open">Open</option><option value="inProgress">In Progress</option><option value="resolved">Resolved</option></select>
+                <button class="btn-danger btn-sm" style="margin-left:auto" @click="$store.app.deleteIssue(issue.id)">Remove</button>
               </div>
-              <template x-for="note in issue.notes" :key="note.id">
-                <div class="issue-note-item">
-                  <div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div>
-                  <div class="issue-note-text" x-text="note.text"></div>
-                </div>
-              </template>
-              <div class="empty-state" x-show="issue.notes.length === 0" style="padding:8px 0;">
-                <div class="text-muted" style="font-size:0.82rem;">No notes yet.</div>
-              </div>
-              <div class="add-note-form">
-                <input type="text" placeholder="Add a note..." x-model="$store.app.newIssueNote"
-                       @keydown.enter="$store.app.addIssueNote(issue.id)">
-                <button class="btn-primary btn-sm" @click="$store.app.addIssueNote(issue.id)">Add</button>
-              </div>
+              <template x-for="note in issue.notes" :key="note.id"><div class="issue-note-item"><div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="issue-note-text" x-text="note.text"></div></div></template>
+              <div class="add-note-form"><input type="text" placeholder="Add a note..." x-model="$store.app.newIssueNote" @keydown.enter="$store.app.addIssueNote(issue.id)"><button class="btn-primary btn-sm" @click="$store.app.addIssueNote(issue.id)">Add</button></div>
             </div>
           </div>
         </template>
-
-        <div class="empty-state" x-show="$store.app.filteredIssues.length === 0">
-          <svg viewBox="0 0 24 24"><use href="#icon-alert-circle"/></svg>
-          <div>No issues to track. Add customer pain points, support cases, or escalations above.</div>
-        </div>
+        <div class="empty-state" x-show="$store.app.filteredIssues.length === 0"><svg viewBox="0 0 24 24"><use href="#icon-alert-circle"/></svg><div>No issues to track.</div></div>
       </section>
 
       <!-- ======== QUICK NOTES ======== -->
       <section id="notes" class="section">
-        <div class="section-header">
-          <h2 class="section-title"><svg><use href="#icon-file-text"/></svg> Quick Notes</h2>
-        </div>
+        <div class="section-header"><h2 class="section-title"><svg><use href="#icon-file-text"/></svg> Quick Notes</h2></div>
         <div class="quick-notes-input">
-          <textarea placeholder="Jot something down..." x-model="$store.app.newQuickNote"
-                    @keydown.ctrl.enter="$store.app.addQuickNote()"></textarea>
-          <button class="btn-primary" @click="$store.app.addQuickNote()" style="align-self:flex-end;">Add Note</button>
+          <textarea placeholder="Jot something down..." x-model="$store.app.newQuickNote" @keydown.ctrl.enter="$store.app.addQuickNote()"></textarea>
+          <button class="btn-primary" @click="$store.app.addQuickNote()" style="align-self:flex-end">Add Note</button>
         </div>
-        <div class="notes-search" x-show="$store.app.quickNotes.length > 0">
-          <input type="text" placeholder="Search notes..." x-model="$store.app.notesSearch">
-        </div>
+        <div class="notes-search" x-show="$store.app.quickNotes.length > 0"><input type="text" placeholder="Search notes..." x-model="$store.app.notesSearch"></div>
         <template x-for="note in $store.app.filteredNotes" :key="note.id">
           <div class="note-card" :class="{ pinned: note.pinned }">
-            <div class="note-body">
-              <div class="note-timestamp" x-text="formatTimestamp(note.timestamp)"></div>
-              <div class="note-text" x-text="note.text"></div>
-            </div>
+            <div class="note-body"><div class="note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="note-text" x-text="note.text"></div></div>
             <div class="note-actions">
-              <button :class="{ 'pin-active': note.pinned }" @click="$store.app.togglePinNote(note.id)"
-                      :title="note.pinned ? 'Unpin' : 'Pin'">
-                <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><use href="#icon-pin"/></svg>
-              </button>
-              <button @click="$store.app.deleteNote(note.id)" title="Delete">
-                <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><use href="#icon-trash"/></svg>
-              </button>
+              <button :class="{ 'pin-active': note.pinned }" @click="$store.app.togglePinNote(note.id)" :title="note.pinned ? 'Unpin' : 'Pin'"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><use href="#icon-pin"/></svg></button>
+              <button @click="$store.app.deleteNote(note.id)" title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><use href="#icon-trash"/></svg></button>
             </div>
           </div>
         </template>
-        <div class="empty-state" x-show="$store.app.quickNotes.length === 0">
-          <svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg>
-          <div>Your scratchpad is empty. Jot down quick thoughts, call notes, or reminders.</div>
-        </div>
+        <div class="empty-state" x-show="$store.app.quickNotes.length === 0"><svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg><div>Your scratchpad is empty.</div></div>
       </section>
-
     </main>
 
     <!-- ============ SETTINGS MODAL ============ -->
-    <div class="modal-backdrop" x-show="$store.app.showSettings" x-transition.opacity
-         @click.self="$store.app.showSettings = false">
+    <div class="modal-backdrop" x-show="$store.app.showSettings" x-transition.opacity @click.self="$store.app.showSettings = false">
       <div class="modal" @click.stop>
         <div class="modal-title">Settings</div>
         <div class="modal-section">
           <div class="modal-section-title">Display</div>
-          <div class="toggle-row">
-            <span class="toggle-label">Show weekends</span>
-            <div class="toggle-switch" :class="{ on: $store.app.settings.showWeekends }" @click="$store.app.toggleWeekends()">
-              <div class="toggle-knob"></div>
-            </div>
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Carry forward incomplete tasks</span>
-            <div class="toggle-switch" :class="{ on: $store.app.settings.carryForwardIncomplete }" @click="$store.app.toggleCarryForward()">
-              <div class="toggle-knob"></div>
-            </div>
-          </div>
+          <div class="toggle-row"><span class="toggle-label">Show weekends</span><div class="toggle-switch" :class="{ on: $store.app.settings.showWeekends }" @click="$store.app.toggleWeekends()"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row"><span class="toggle-label">Carry forward incomplete tasks</span><div class="toggle-switch" :class="{ on: $store.app.settings.carryForwardIncomplete }" @click="$store.app.toggleCarryForward()"><div class="toggle-knob"></div></div></div>
         </div>
         <div class="modal-section">
           <div class="modal-section-title">Activity Targets (%)</div>
-          <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
-            <div class="target-row">
-              <label x-text="cat.label"></label>
-              <input type="number" min="0" max="100" :value="$store.app.settings.timeAllocationTargets[key]"
-                     @change="$store.app.updateTarget(key, $event.target.value)">
-              <span class="text-muted">%</span>
-            </div>
-          </template>
+          <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key"><div class="target-row"><label x-text="cat.label"></label><input type="number" min="0" max="100" :value="$store.app.settings.timeAllocationTargets[key]" @change="$store.app.updateTarget(key, $event.target.value)"><span class="text-muted">%</span></div></template>
         </div>
         <div class="modal-section">
           <div class="modal-section-title">Data Management</div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn-secondary" @click="$store.app.exportData()">Export Backup</button>
-            <label class="btn-secondary" style="cursor:pointer;">
-              Import Backup
-              <input type="file" accept=".json" @change="$store.app.importData($event)" class="sr-only">
-            </label>
+            <label class="btn-secondary" style="cursor:pointer">Import Backup<input type="file" accept=".json" @change="$store.app.importData($event)" class="sr-only"></label>
             <button class="btn-danger" @click="$store.app.clearAllData()">Clear All Data</button>
           </div>
         </div>
-        <div class="modal-actions">
-          <button class="btn-primary" @click="$store.app.showSettings = false">Done</button>
-        </div>
+        <div class="modal-actions"><button class="btn-primary" @click="$store.app.showSettings = false">Done</button></div>
       </div>
     </div>
-
   </div>
 
   <!-- ============ SVG ICON SPRITE ============ -->
@@ -718,59 +573,26 @@
     <symbol id="icon-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
     <symbol id="icon-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
     <symbol id="icon-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
-    <symbol id="icon-settings" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </symbol>
-    <symbol id="icon-download" viewBox="0 0 24 24">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-    </symbol>
-    <symbol id="icon-upload" viewBox="0 0 24 24">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-    </symbol>
-    <symbol id="icon-calendar" viewBox="0 0 24 24">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-    </symbol>
-    <symbol id="icon-target" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
-    </symbol>
-    <symbol id="icon-alert-circle" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </symbol>
-    <symbol id="icon-check-circle" viewBox="0 0 24 24">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-    </symbol>
-    <symbol id="icon-file-text" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-    </symbol>
-    <symbol id="icon-flag" viewBox="0 0 24 24">
-      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
-    </symbol>
-    <symbol id="icon-external-link" viewBox="0 0 24 24">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-    </symbol>
-    <symbol id="icon-arrow-up" viewBox="0 0 24 24">
-      <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
-    </symbol>
-    <symbol id="icon-arrow-down" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-    </symbol>
-    <symbol id="icon-headset" viewBox="0 0 24 24">
-      <path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-    </symbol>
-    <symbol id="icon-alert-triangle" viewBox="0 0 24 24">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-    </symbol>
-    <symbol id="icon-arrow-up-circle" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/>
-    </symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="icon-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+    <symbol id="icon-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+    <symbol id="icon-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></symbol>
+    <symbol id="icon-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+    <symbol id="icon-external-link" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+    <symbol id="icon-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
+    <symbol id="icon-arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></symbol>
+    <symbol id="icon-repeat" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+    <symbol id="icon-headset" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+    <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="icon-arrow-up-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></symbol>
     <symbol id="icon-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></symbol>
-    <symbol id="icon-pin" viewBox="0 0 24 24">
-      <line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/>
-    </symbol>
-    <symbol id="icon-trash" viewBox="0 0 24 24">
-      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-    </symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
   </svg>
 
   <script src="lib/sortable.min.js"></script>
