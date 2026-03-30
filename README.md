@@ -23,17 +23,21 @@ git clone https://github.com/Aaronjacobs000/sophos-organiser.git "Sophos Organis
 
 ### Step 2: Launch it
 
-**Double-click `Start Organiser.bat`**
+**Windows:** Double-click **`Start Organiser.bat`**
+
+**Mac:** Double-click **`Start Organiser.command`**
 
 That's it. A small terminal window will open (keep it open) and your browser will launch the organiser.
 
 When you're done for the day, close the terminal window.
 
+> **Mac users:** The first time you double-click the `.command` file, macOS may say it's from an unidentified developer. Right-click the file, choose **Open**, then click **Open** in the dialog. You only need to do this once.
+
 ---
 
 ## How It Works
 
-When you double-click `Start Organiser.bat`, it runs a tiny local web server using PowerShell (built into Windows — no extra software needed). Your browser connects to this server at `http://localhost:8080`.
+When you launch the organiser, it runs a tiny local web server on your machine (PowerShell on Windows, Python on Mac — both built in, no extra software to install). Your browser connects to this server at `http://localhost:8080`.
 
 Every time you make a change, the organiser automatically saves to a `data.json` file in the same folder as the app. Because this folder lives in your OneDrive, your data syncs to the cloud automatically.
 
@@ -109,22 +113,29 @@ You can also use the **Export** button (download icon in the header) to save a t
 
 ## Troubleshooting
 
-**"Start Organiser.bat" doesn't work / nothing happens**
+**Windows: "Start Organiser.bat" doesn't work / nothing happens**
 - Make sure you're on Windows 10 or 11 (PowerShell is built in)
 - Right-click the .bat file and choose "Run as administrator" if needed
 - If port 8080 is in use, the terminal will show an error — close whatever else is using that port
 
+**Mac: "Start Organiser.command" won't open**
+- Right-click the file, choose **Open**, then click **Open** in the dialog (first time only)
+- If you get "python3 not found", open Terminal and run: `xcode-select --install`
+
 **The page says it can't connect**
-- Make sure the terminal window from `Start Organiser.bat` is still open
+- Make sure the terminal window is still open
 - Try refreshing the browser page
 
 **My data disappeared!**
 - Check that `data.json` exists in the app folder
-- If you opened the app directly (without the .bat), data may have been saved to browser localStorage instead — launch via `Start Organiser.bat` to use file-based storage
+- If you opened `index.html` directly (without the launcher), data may have been saved to browser localStorage instead — always use the launcher for file-based storage
 
 **Can I use this on multiple machines?**
 - Yes — store the folder in OneDrive. The `data.json` file syncs between machines.
 - Just make sure you close the organiser on one machine before opening on another (to avoid sync conflicts).
+
+**Can I switch between a Windows PC and a Mac?**
+- Yes. The `data.json` file is the same format on both. OneDrive syncs it. Just use the right launcher for each OS.
 
 ---
 
