@@ -736,6 +736,12 @@ document.addEventListener('alpine:init', () => {
     updateMeddpicc(id, field, value) { const o = this.opportunities.find(x => x.id === id); if (o) { if (!o.meddpicc) o.meddpicc = createEmptyMeddpicc(); o.meddpicc[field] = value; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
     getMeddpiccScore(opp) { if (!opp.meddpicc) return 0; return MEDDPICC_FIELDS.filter(f => opp.meddpicc[f.key]?.trim()).length; },
     archiveOpportunity(id) { const o = this.opportunities.find(x => x.id === id); if (o) { o.archived = true; o.updatedAt = new Date().toISOString(); this.expandedOpp = null; debouncedSave(this); } },
+    deleteOpportunity(id) {
+      if (!confirm('Permanently delete this opportunity?')) return;
+      this.opportunities = this.opportunities.filter(x => x.id !== id);
+      if (this.expandedOpp === id) this.expandedOpp = null;
+      debouncedSave(this);
+    },
     getOppCloseDaysLeft(opp) { return opp.expectedCloseDate ? daysBetween(this.today, opp.expectedCloseDate) : null; },
     getOppUrgency(opp) { const d = this.getOppCloseDaysLeft(opp); if (d === null) return ''; if (d <= 7) return 'urgent-critical'; if (d <= 14) return 'urgent-warning'; return ''; },
 
@@ -810,6 +816,24 @@ document.addEventListener('alpine:init', () => {
       Object.assign(this, fresh); this.viewingWeekKey = fresh.currentWeekKey; saveData(this);
     },
     scrollTo(sectionId) { this.activeNav = sectionId; const el = document.getElementById(sectionId); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+
+    scrollToOpp(oppId) {
+      this.activeNav = 'opportunities';
+      this.expandedOpp = oppId;
+      setTimeout(() => {
+        const el = document.querySelector(`[data-opp-id="${oppId}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    },
+
+    scrollToIssue(issueId) {
+      this.activeNav = 'issues';
+      this.expandedIssue = issueId;
+      setTimeout(() => {
+        const el = document.querySelector(`[data-issue-id="${issueId}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    },
   });
 });
 

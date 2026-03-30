@@ -1922,6 +1922,41 @@ textarea {
   flex: 1;
 }
 
+/* Fix form inputs inside light-background cards (opp-expanded, issue-notes) */
+.opp-expanded input,
+.opp-expanded select,
+.opp-expanded textarea,
+.issue-notes input,
+.issue-notes select,
+.issue-notes textarea {
+  background: rgba(0, 26, 71, 0.05);
+  border-color: rgba(0, 26, 71, 0.15);
+  color: var(--sophos-dark-blue);
+}
+.opp-expanded input:focus,
+.opp-expanded select:focus,
+.opp-expanded textarea:focus,
+.issue-notes input:focus,
+.issue-notes select:focus,
+.issue-notes textarea:focus {
+  border-color: var(--sophos-blue);
+}
+.opp-expanded input::placeholder,
+.opp-expanded textarea::placeholder,
+.issue-notes input::placeholder,
+.issue-notes textarea::placeholder {
+  color: var(--sophos-slate);
+}
+.opp-expanded .form-label,
+.issue-notes .form-label {
+  color: var(--sophos-charcoal);
+}
+.opp-expanded select option,
+.issue-notes select option {
+  background: white;
+  color: var(--sophos-dark-blue);
+}
+
 /* Cadence manage panel */
 .cadence-manage-item {
   display: flex;

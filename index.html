@@ -127,14 +127,16 @@
               <!-- Next steps: opportunities -->
               <div class="planner-nextstep-list" x-show="day.oppNextSteps.length > 0 || day.issueNextSteps.length > 0">
                 <template x-for="opp in day.oppNextSteps" :key="opp.id">
-                  <div class="planner-nextstep-chip opp-chip" :title="opp.nextStepText || opp.accountName">
+                  <div class="planner-nextstep-chip opp-chip" :title="opp.nextStepText || opp.accountName"
+                       @click="$store.app.scrollToOpp(opp.id)" style="cursor:pointer">
                     <svg viewBox="0 0 24 24"><use href="#icon-target"/></svg>
                     <span class="chip-label" x-text="opp.nextStepText || opp.accountName"></span>
                     <span class="chip-sub" x-text="opp.accountName" x-show="opp.nextStepText"></span>
                   </div>
                 </template>
                 <template x-for="iss in day.issueNextSteps" :key="iss.id">
-                  <div class="planner-nextstep-chip issue-chip" :title="iss.nextStepText || iss.title">
+                  <div class="planner-nextstep-chip issue-chip" :title="iss.nextStepText || iss.title"
+                       @click="$store.app.scrollToIssue(iss.id)" style="cursor:pointer">
                     <svg viewBox="0 0 24 24"><use href="#icon-alert-circle"/></svg>
                     <span class="chip-label" x-text="iss.nextStepText || iss.title"></span>
                     <span class="chip-sub" x-text="iss.account" x-show="iss.account"></span>
@@ -426,7 +428,7 @@
           </div>
         </div>
         <template x-for="opp in $store.app.filteredOpportunities" :key="opp.id">
-          <div class="opp-card">
+          <div class="opp-card" :data-opp-id="opp.id">
             <div class="opp-card-inner">
               <div class="opp-type-stripe" :style="`background-color: ${OPP_TYPES[opp.type]?.color || '#6A889B'}`"></div>
               <div class="opp-card-body">
@@ -479,7 +481,10 @@
                 <div class="meddpicc-title">MEDDPICC Qualification <span class="meddpicc-score" :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }" x-text="$store.app.getMeddpiccScore(opp) + ' / 8'"></span></div>
                 <div class="meddpicc-grid"><template x-for="field in MEDDPICC_FIELDS" :key="field.key"><div class="meddpicc-field"><label x-text="field.label"></label><input type="text" :placeholder="field.hint" :value="opp.meddpicc ? opp.meddpicc[field.key] : ''" @input="$store.app.updateMeddpicc(opp.id, field.key, $event.target.value)"></div></template></div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-danger btn-sm" @click="$store.app.archiveOpportunity(opp.id)">Archive Deal</button></div>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-danger btn-sm" @click="$store.app.archiveOpportunity(opp.id)">Archive</button>
+                <button class="btn-danger btn-sm" style="background:transparent;color:var(--sophos-red);border:1px solid var(--sophos-red);" @click="$store.app.deleteOpportunity(opp.id)">Delete</button>
+              </div>
             </div>
           </div>
         </template>
@@ -510,7 +515,7 @@
           </template>
         </div>
         <template x-for="issue in $store.app.filteredIssues" :key="issue.id">
-          <div class="issue-card">
+          <div class="issue-card" :data-issue-id="issue.id">
             <div class="issue-card-body" @click="$store.app.toggleExpandIssue(issue.id)" style="cursor:pointer">
               <div class="issue-card-top">
                 <div class="issue-type-icon" :class="issue.type"><svg viewBox="0 0 24 24"><use :href="'#icon-' + (ISSUE_TYPES[issue.type]?.icon || 'circle')"/></svg></div>
