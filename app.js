@@ -184,32 +184,79 @@ function computeNextDueDate(currentDue, recurrence, customDays) {
 }
 
 // ===================== Persistence =====================
+// Data is saved to both localStorage (fast cache) and data.json via the local server.
+// On load, file takes priority over localStorage (file is the source of truth).
+
+let _useFileAPI = false; // Set to true once we confirm the server is running
+
+function stateToJSON(state) {
+  return JSON.stringify({
+    version: SCHEMA_VERSION,
+    currentWeekKey: state.currentWeekKey,
+    settings: state.settings,
+    todos: state.todos,
+    weeks: state.weeks,
+    opportunities: state.opportunities,
+    issues: state.issues,
+    quickNotes: state.quickNotes,
+    archive: state.archive,
+  });
+}
+
+function parseAndMigrate(raw) {
+  try {
+    const data = JSON.parse(raw);
+    if (!data || !data.version) return null;
+    if (data.version === SCHEMA_VERSION) return data;
+    return migrateData(data);
+  } catch (e) { return null; }
+}
+
 function loadData() {
+  // Synchronous load from localStorage (file load happens async after init)
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (data.version === SCHEMA_VERSION) return data;
-      return migrateData(data);
+    if (raw) return parseAndMigrate(raw);
+  } catch (e) { console.warn('Failed to load from localStorage:', e); }
+  return null;
+}
+
+async function loadDataFromFile() {
+  try {
+    const resp = await fetch('/api/load');
+    if (resp.ok) {
+      const text = await resp.text();
+      if (text && text !== 'null') {
+        _useFileAPI = true;
+        return parseAndMigrate(text);
+      }
+      // Server responded but no file yet — that's fine, we'll create it on first save
+      _useFileAPI = true;
     }
-  } catch (e) { console.warn('Failed to load data:', e); }
+  } catch (e) {
+    // Server not running — fall back to localStorage only
+    _useFileAPI = false;
+  }
   return null;
 }
 
 function saveData(state) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      version: SCHEMA_VERSION,
-      currentWeekKey: state.currentWeekKey,
-      settings: state.settings,
-      todos: state.todos,
-      weeks: state.weeks,
-      opportunities: state.opportunities,
-      issues: state.issues,
-      quickNotes: state.quickNotes,
-      archive: state.archive,
-    }));
-  } catch (e) { console.error('Failed to save:', e); }
+  const json = stateToJSON(state);
+
+  // Always save to localStorage as fast cache
+  try { localStorage.setItem(STORAGE_KEY, json); } catch (e) { /* ignore */ }
+
+  // Save to file if server is available
+  if (_useFileAPI) {
+    fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: json,
+    }).catch(() => {
+      // Server went away — keep using localStorage
+      console.warn('File save failed, using localStorage only');
+    });
+  }
 }
 
 function migrateData(data) {
@@ -353,6 +400,7 @@ function debouncedSave(state) {
 
 // ===================== Alpine Store =====================
 document.addEventListener('alpine:init', () => {
+  // Start with localStorage data (synchronous, instant)
   const loaded = loadData();
   const initial = loaded || createDefaultState();
   const realWeekKey = getISOWeekKey(new Date());
@@ -360,6 +408,25 @@ document.addEventListener('alpine:init', () => {
   if (loaded && loaded.currentWeekKey !== realWeekKey) {
     initial.currentWeekKey = realWeekKey;
   }
+
+  // Async: try to load from data.json file (takes priority if available)
+  loadDataFromFile().then(fileData => {
+    if (fileData) {
+      const store = Alpine.store('app');
+      const rk = getISOWeekKey(new Date());
+      initializeWeek(fileData, rk);
+      if (fileData.currentWeekKey !== rk) fileData.currentWeekKey = rk;
+      // Merge file data into the live store
+      Object.assign(store, fileData);
+      store.viewingWeekKey = fileData.currentWeekKey;
+      store.today = getToday();
+      console.log('Loaded data from data.json');
+    } else if (_useFileAPI) {
+      // Server is running but no file yet — save current state to create it
+      saveData(Alpine.store('app'));
+      console.log('Created data.json from current state');
+    }
+  });
 
   Alpine.store('app', {
     ...initial,
