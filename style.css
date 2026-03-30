@@ -1042,13 +1042,13 @@ textarea {
   color: white;
 }
 .status-pill.open {
-  background: var(--sophos-red);
-}
-.status-pill.inProgress {
-  background: var(--sophos-orange);
+  background: var(--sophos-blue);
 }
 .status-pill.resolved {
   background: var(--sophos-green);
+}
+.status-pill.closed {
+  background: var(--sophos-slate);
 }
 
 .days-open-badge {

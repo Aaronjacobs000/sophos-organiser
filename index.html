@@ -429,11 +429,12 @@
         </div>
         <template x-for="opp in $store.app.filteredOpportunities" :key="opp.id">
           <div class="opp-card" :data-opp-id="opp.id">
-            <div class="opp-card-inner">
+            <div class="opp-card-inner" @click="$store.app.toggleExpandOpp(opp.id)" style="cursor:pointer">
               <div class="opp-type-stripe" :style="`background-color: ${OPP_TYPES[opp.type]?.color || '#6A889B'}`"></div>
               <div class="opp-card-body">
                 <div class="opp-card-top"><span class="opp-account" x-text="opp.accountName"></span><span class="opp-deal-size" x-text="formatCurrency(opp.dealSize)"></span></div>
                 <div class="opp-card-details">
+                  <span class="status-pill" :class="opp.status || 'open'" x-text="(opp.status || 'open') === 'open' ? 'Open' : 'Closed'"></span>
                   <span class="opp-type-badge" :style="`background-color: ${OPP_TYPES[opp.type]?.color || '#6A889B'}`" x-text="OPP_TYPES[opp.type]?.label || opp.type"></span>
                   <span class="opp-stage" x-text="opp.stage" x-show="opp.stage"></span>
                   <span class="opp-close-date" :class="$store.app.getOppUrgency(opp)" x-show="opp.expectedCloseDate">
@@ -442,19 +443,21 @@
                   </span>
                   <span class="meddpicc-score" x-show="opp.dealSize >= 30000" :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }" x-text="'MEDDPICC ' + $store.app.getMeddpiccScore(opp) + '/8'"></span>
                   <div class="opp-card-actions">
-                    <button class="opp-priority-flag" :class="{ flagged: opp.priority }" @click="$store.app.toggleOppPriority(opp.id)" title="Toggle priority"><svg viewBox="0 0 24 24"><use href="#icon-flag"/></svg></button>
-                    <a :href="opp.salesforceLink" target="_blank" rel="noopener" class="opp-sf-link" x-show="opp.salesforceLink" title="Open in Salesforce"><svg viewBox="0 0 24 24"><use href="#icon-external-link"/></svg> SFDC</a>
-                    <button class="btn-icon" @click="$store.app.toggleExpandOpp(opp.id)"><svg><use href="#icon-chevron-down"/></svg></button>
+                    <button class="opp-priority-flag" :class="{ flagged: opp.priority }" @click.stop="$store.app.toggleOppPriority(opp.id)" title="Toggle priority"><svg viewBox="0 0 24 24"><use href="#icon-flag"/></svg></button>
+                    <a :href="opp.salesforceLink" target="_blank" rel="noopener" class="opp-sf-link" x-show="opp.salesforceLink" @click.stop title="Open in Salesforce"><svg viewBox="0 0 24 24"><use href="#icon-external-link"/></svg> SFDC</a>
                   </div>
                 </div>
               </div>
             </div>
             <div class="opp-expanded" x-show="$store.app.expandedOpp === opp.id" x-transition.opacity>
               <div class="add-form-grid" style="margin-bottom:8px;">
+                <div class="form-group"><label class="form-label">Account Name</label><input type="text" :value="opp.accountName" @change="$store.app.updateOppField(opp.id, 'accountName', $event.target.value)"></div>
+                <div class="form-group"><label class="form-label">Status</label><select :value="opp.status || 'open'" @change="$store.app.updateOppStatus(opp.id, $event.target.value)"><option value="open">Open</option><option value="closed">Closed</option></select></div>
                 <div class="form-group"><label class="form-label">Stage</label><select :value="opp.stage" @change="$store.app.updateOppField(opp.id, 'stage', $event.target.value)"><option value="">Select...</option><template x-for="stage in OPP_STAGES" :key="stage"><option :value="stage" x-text="stage" :selected="stage === opp.stage"></option></template></select></div>
                 <div class="form-group"><label class="form-label">Deal Size</label><input type="number" :value="opp.dealSize" @change="$store.app.updateOppField(opp.id, 'dealSize', $event.target.value)"></div>
                 <div class="form-group"><label class="form-label">Close Date</label><input type="date" :value="opp.expectedCloseDate" @change="$store.app.updateOppField(opp.id, 'expectedCloseDate', $event.target.value)"></div>
                 <div class="form-group"><label class="form-label">Type</label><select :value="opp.type" @change="$store.app.updateOppField(opp.id, 'type', $event.target.value)"><option value="newLogo">New Logo</option><option value="expansion">Expansion</option><option value="renewal">Renewal</option></select></div>
+                <div class="form-group full-width"><label class="form-label">Salesforce Link</label><input type="url" :value="opp.salesforceLink" @change="$store.app.updateOppField(opp.id, 'salesforceLink', $event.target.value)" placeholder="https://sophos.my.salesforce.com/..."></div>
               </div>
               <!-- Next Step -->
               <div class="next-step-row">
@@ -510,7 +513,7 @@
           <div class="add-form-actions"><button class="btn-primary" @click="$store.app.submitIssue()">Save Issue</button><button class="btn-secondary" @click="$store.app.showAddIssue = false">Cancel</button></div>
         </div>
         <div class="status-tabs">
-          <template x-for="[status, label] in [['open','Open'],['inProgress','In Progress'],['resolved','Resolved'],['all','All']]" :key="status">
+          <template x-for="[status, label] in [['open','Open'],['resolved','Resolved'],['all','All']]" :key="status">
             <button class="status-tab" :class="{ active: $store.app.issueFilter === status }" @click="$store.app.issueFilter = status" x-text="label"></button>
           </template>
         </div>
@@ -528,18 +531,23 @@
               </div>
             </div>
             <div class="issue-notes" x-show="$store.app.expandedIssue === issue.id" x-transition.opacity>
-              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
-                <span class="form-label" style="margin:0">Status:</span>
-                <select :value="issue.status" @change="$store.app.updateIssueStatus(issue.id, $event.target.value)" style="font-size:0.82rem;padding:3px 6px;"><option value="open">Open</option><option value="inProgress">In Progress</option><option value="resolved">Resolved</option></select>
-                <button class="btn-danger btn-sm" style="margin-left:auto" @click="$store.app.deleteIssue(issue.id)">Remove</button>
+              <div class="add-form-grid" style="margin-bottom:8px;">
+                <div class="form-group"><label class="form-label">Title</label><input type="text" :value="issue.title" @change="$store.app.updateIssueField(issue.id, 'title', $event.target.value)"></div>
+                <div class="form-group"><label class="form-label">Account</label><input type="text" :value="issue.account" @change="$store.app.updateIssueField(issue.id, 'account', $event.target.value)"></div>
+                <div class="form-group"><label class="form-label">Status</label><select :value="issue.status" @change="$store.app.updateIssueStatus(issue.id, $event.target.value)"><option value="open">Open</option><option value="resolved">Resolved</option></select></div>
+                <div class="form-group"><label class="form-label">Type</label><select :value="issue.type" @change="$store.app.updateIssueField(issue.id, 'type', $event.target.value)"><option value="supportCase">Support Case</option><option value="customerPainPoint">Customer Pain Point</option><option value="escalation">Escalation</option><option value="other">Other</option></select></div>
+                <div class="form-group full-width"><label class="form-label">Link</label><input type="url" :value="issue.link" @change="$store.app.updateIssueField(issue.id, 'link', $event.target.value)" placeholder="https://support.sophos.com/..."></div>
               </div>
               <!-- Next Step -->
               <div class="next-step-row">
                 <div class="form-group"><label class="form-label">Next Step Date</label><input type="date" :value="issue.nextStepDate" @change="$store.app.updateIssueField(issue.id, 'nextStepDate', $event.target.value)"></div>
                 <div class="form-group" style="flex:2"><label class="form-label">Next Step</label><input type="text" :value="issue.nextStepText" @change="$store.app.updateIssueField(issue.id, 'nextStepText', $event.target.value)" placeholder="e.g. Follow up with L3 support"></div>
               </div>
+              <!-- Notes -->
+              <div class="form-label" style="margin-bottom:4px;">Notes</div>
               <template x-for="note in issue.notes" :key="note.id"><div class="issue-note-item"><div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="issue-note-text" x-text="note.text"></div></div></template>
               <div class="add-note-form"><input type="text" placeholder="Add a note..." x-model="$store.app.newIssueNote" @keydown.enter="$store.app.addIssueNote(issue.id)"><button class="btn-primary btn-sm" @click="$store.app.addIssueNote(issue.id)">Add</button></div>
+              <div style="margin-top:8px;"><button class="btn-danger btn-sm" @click="$store.app.deleteIssue(issue.id)">Remove</button></div>
             </div>
           </div>
         </template>

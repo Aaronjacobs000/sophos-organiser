@@ -288,22 +288,24 @@ function migrateData(data) {
     data.version = 4;
   }
 
-  // v4 -> v5: Opp notes string -> timestamped array, add nextStep fields to opps and issues
+  // v4 -> v5: Opp notes string -> timestamped array, add nextStep/status fields, simplify issue statuses
   if (data.version === 4) {
     if (data.opportunities) {
       data.opportunities.forEach(opp => {
-        // Convert string notes to timestamped array
         if (typeof opp.notes === 'string') {
           opp.notes = opp.notes.trim() ? [{ id: generateId('on'), text: opp.notes.trim(), timestamp: opp.createdAt || new Date().toISOString() }] : [];
         }
         if (!opp.nextStepDate) opp.nextStepDate = '';
         if (!opp.nextStepText) opp.nextStepText = '';
+        if (!opp.status) opp.status = opp.archived ? 'closed' : 'open';
       });
     }
     if (data.issues) {
       data.issues.forEach(iss => {
         if (!iss.nextStepDate) iss.nextStepDate = '';
         if (!iss.nextStepText) iss.nextStepText = '';
+        // Collapse inProgress -> open
+        if (iss.status === 'inProgress') iss.status = 'open';
       });
     }
     data.version = 5;
@@ -711,6 +713,7 @@ document.addEventListener('alpine:init', () => {
         dealSize: parseFloat(this.newOpp.dealSize) || 0, type: this.newOpp.type,
         stage: this.newOpp.stage.trim(), salesforceLink: this.newOpp.salesforceLink.trim(),
         expectedCloseDate: this.newOpp.expectedCloseDate, priority: false,
+        status: 'open',
         notes: initialNotes,
         nextStepDate: this.newOpp.nextStepDate || '',
         nextStepText: this.newOpp.nextStepText || '',
@@ -735,6 +738,10 @@ document.addEventListener('alpine:init', () => {
     updateOppField(id, field, value) { const o = this.opportunities.find(x => x.id === id); if (o) { o[field] = field === 'dealSize' ? (parseFloat(value) || 0) : value; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
     updateMeddpicc(id, field, value) { const o = this.opportunities.find(x => x.id === id); if (o) { if (!o.meddpicc) o.meddpicc = createEmptyMeddpicc(); o.meddpicc[field] = value; o.updatedAt = new Date().toISOString(); debouncedSave(this); } },
     getMeddpiccScore(opp) { if (!opp.meddpicc) return 0; return MEDDPICC_FIELDS.filter(f => opp.meddpicc[f.key]?.trim()).length; },
+    updateOppStatus(id, status) {
+      const o = this.opportunities.find(x => x.id === id);
+      if (o) { o.status = status; o.updatedAt = new Date().toISOString(); debouncedSave(this); }
+    },
     archiveOpportunity(id) { const o = this.opportunities.find(x => x.id === id); if (o) { o.archived = true; o.updatedAt = new Date().toISOString(); this.expandedOpp = null; debouncedSave(this); } },
     deleteOpportunity(id) {
       if (!confirm('Permanently delete this opportunity?')) return;
