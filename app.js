@@ -459,6 +459,9 @@ document.addEventListener('alpine:init', () => {
     showAddCadence: false,
     editingCadence: null,
     newCadence: { label: '', duration: '30min', day: 'Mon', frequency: 'weekly', description: '' },
+    showReport: false,
+    reportMonth: formatDate(new Date()).substring(0, 7), // YYYY-MM
+    reportShow: { cadence: true, todos: true, meetings: true, opportunities: true, issues: true },
     activeNav: 'planner',
 
     // --- Computed ---
@@ -908,6 +911,173 @@ document.addEventListener('alpine:init', () => {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
     },
+
+    // =================== REPORTS ===================
+    toggleReportSection(key) {
+      this.reportShow[key] = !this.reportShow[key];
+    },
+
+    get reportMonthLabel() {
+      const [y, m] = this.reportMonth.split('-');
+      return new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+    },
+
+    // Get all ISO week keys that overlap with the selected month
+    get reportWeekKeys() {
+      const [y, m] = this.reportMonth.split('-').map(Number);
+      const firstDay = new Date(y, m - 1, 1);
+      const lastDay = new Date(y, m, 0); // last day of month
+      const weeks = new Set();
+      const d = new Date(firstDay);
+      while (d <= lastDay) {
+        weeks.add(getISOWeekKey(d));
+        d.setDate(d.getDate() + 1);
+      }
+      return [...weeks].sort();
+    },
+
+    getReportWeekData(weekKey) {
+      const dates = getWeekDates(weekKey);
+      const weekStart = parseDate(dates[0]);
+      const weekEnd = parseDate(dates[6]);
+      const weekLabel = `${weekStart.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} – ${weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
+      const weekData = this.weeks[weekKey] || { cadence: {}, meetings: { customerCQ: 0, customerNQ: 0, partner: 0 } };
+      const cadenceItems = this.settings.cadenceItems || DEFAULT_CADENCE_ITEMS;
+
+      // --- Cadence analysis ---
+      const cadenceResults = [];
+      const cadenceTimestamps = []; // all completion timestamps for honesty analysis
+      const visibleCadence = cadenceItems.filter(i => {
+        if (i.frequency === 'weekly') return true;
+        if (i.frequency === 'fortnightly') return isFortnightlyWeek(weekKey);
+        if (i.frequency === 'monthly') return isFirstWeekOfMonth(weekKey);
+        return true;
+      });
+      visibleCadence.forEach(item => {
+        const ts = weekData.cadence[item.id];
+        const completed = !!ts && typeof ts === 'string';
+        cadenceResults.push({
+          id: item.id,
+          label: item.label,
+          day: item.day,
+          frequency: item.frequency,
+          completed,
+          timestamp: completed ? ts : null,
+          timeLabel: completed ? formatShortTimestamp(ts) : null,
+          dayOfWeek: completed ? new Date(ts).getDay() : null, // 0=Sun
+          hourOfDay: completed ? new Date(ts).getHours() + new Date(ts).getMinutes() / 60 : null,
+        });
+        if (completed) cadenceTimestamps.push(new Date(ts).getTime());
+      });
+
+      // Honesty analysis: check if items were bunched together
+      let honestyFlag = 'good'; // good, warning, concern
+      let honestyNote = '';
+      if (cadenceTimestamps.length >= 3) {
+        cadenceTimestamps.sort((a, b) => a - b);
+        const firstTs = cadenceTimestamps[0];
+        const lastTs = cadenceTimestamps[cadenceTimestamps.length - 1];
+        const spanMinutes = (lastTs - firstTs) / 60000;
+        const completedCount = cadenceTimestamps.length;
+
+        if (completedCount >= 5 && spanMinutes < 10) {
+          honestyFlag = 'concern';
+          honestyNote = `${completedCount} items completed within ${Math.round(spanMinutes)} minutes`;
+        } else if (completedCount >= 4 && spanMinutes < 30) {
+          honestyFlag = 'warning';
+          honestyNote = `${completedCount} items completed within ${Math.round(spanMinutes)} minutes`;
+        } else {
+          // Check how many unique days were used
+          const uniqueDays = new Set(cadenceResults.filter(c => c.completed).map(c => c.dayOfWeek));
+          if (uniqueDays.size === 1 && completedCount >= 5) {
+            honestyFlag = 'warning';
+            honestyNote = `All ${completedCount} items completed on the same day`;
+          } else if (uniqueDays.size >= 3) {
+            honestyNote = `Spread across ${uniqueDays.size} different days`;
+          }
+        }
+      }
+
+      const cadenceTotal = visibleCadence.length;
+      const cadenceCompleted = cadenceResults.filter(c => c.completed).length;
+
+      // --- Todos analysis ---
+      const weekDateSet = new Set(dates);
+      const weekTodos = this.todos.filter(t => weekDateSet.has(t.dueDate));
+      const todosCompleted = weekTodos.filter(t => t.completed).length;
+      const todosTotal = weekTodos.length;
+      const todosByCategory = {};
+      CATEGORY_KEYS.forEach(k => todosByCategory[k] = { total: 0, completed: 0 });
+      weekTodos.forEach(t => {
+        if (todosByCategory[t.category]) {
+          todosByCategory[t.category].total++;
+          if (t.completed) todosByCategory[t.category].completed++;
+        }
+      });
+
+      // --- Meetings ---
+      const meetings = weekData.meetings || { customerCQ: 0, customerNQ: 0, partner: 0 };
+      const meetingsTotal = meetings.customerCQ + meetings.customerNQ + meetings.partner;
+
+      // --- Opportunities active this week ---
+      const oppActivity = {
+        withNextStep: this.opportunities.filter(o => !o.archived && dates.some(d => o.nextStepDate === d)).length,
+        open: this.opportunities.filter(o => !o.archived && (o.status || 'open') === 'open').length,
+      };
+
+      // --- Issues ---
+      const issueActivity = {
+        withNextStep: this.issues.filter(i => dates.some(d => i.nextStepDate === d)).length,
+        open: this.issues.filter(i => i.status === 'open').length,
+      };
+
+      return {
+        weekKey, weekLabel, dates,
+        cadence: { results: cadenceResults, completed: cadenceCompleted, total: cadenceTotal, honestyFlag, honestyNote },
+        todos: { total: todosTotal, completed: todosCompleted, byCategory: todosByCategory },
+        meetings: { ...meetings, total: meetingsTotal },
+        opportunities: oppActivity,
+        issues: issueActivity,
+      };
+    },
+
+    get reportData() {
+      return this.reportWeekKeys.map(wk => this.getReportWeekData(wk));
+    },
+
+    get reportSummary() {
+      const weeks = this.reportData;
+      if (!weeks.length) return null;
+      let cadenceTotal = 0, cadenceCompleted = 0;
+      let todosTotal = 0, todosCompleted = 0;
+      let meetingsTotal = 0, meetingsCQTotal = 0, meetingsNQTotal = 0, meetingsPartnerTotal = 0;
+      let concernWeeks = 0, warningWeeks = 0;
+
+      weeks.forEach(w => {
+        cadenceTotal += w.cadence.total;
+        cadenceCompleted += w.cadence.completed;
+        todosTotal += w.todos.total;
+        todosCompleted += w.todos.completed;
+        meetingsTotal += w.meetings.total;
+        meetingsCQTotal += w.meetings.customerCQ;
+        meetingsNQTotal += w.meetings.customerNQ;
+        meetingsPartnerTotal += w.meetings.partner;
+        if (w.cadence.honestyFlag === 'concern') concernWeeks++;
+        if (w.cadence.honestyFlag === 'warning') warningWeeks++;
+      });
+
+      return {
+        weeks: weeks.length,
+        cadence: { total: cadenceTotal, completed: cadenceCompleted, pct: cadenceTotal > 0 ? Math.round(cadenceCompleted / cadenceTotal * 100) : 0 },
+        todos: { total: todosTotal, completed: todosCompleted, pct: todosTotal > 0 ? Math.round(todosCompleted / todosTotal * 100) : 0 },
+        meetings: { total: meetingsTotal, cq: meetingsCQTotal, nq: meetingsNQTotal, partner: meetingsPartnerTotal, avgPerWeek: weeks.length > 0 ? Math.round(meetingsTotal / weeks.length * 10) / 10 : 0 },
+        honesty: { concernWeeks, warningWeeks },
+      };
+    },
+
+    printReport() {
+      window.print();
+    },
   });
 });
 
@@ -929,6 +1099,7 @@ function initSortable(el, dayKey) {
 document.addEventListener('keydown', (e) => {
   const s = Alpine.store('app'); if (!s) return;
   if (e.key === 'Escape') {
+    if (s.showReport) { s.showReport = false; return; }
     s.showSettings = false; s.showAddOpp = false; s.showAddIssue = false;
     s.showAddTodo = false; s.expandedTodo = null; s.expandedOpp = null; s.expandedIssue = null;
   }

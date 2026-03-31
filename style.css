@@ -2017,9 +2017,403 @@ textarea {
   color: var(--sophos-white);
 }
 
-/* --- Print (hide sidebar) --- */
+/* --- Reports Overlay --- */
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--sophos-dark-blue);
+  z-index: 300;
+  overflow-y: auto;
+  padding: var(--spacing-xl);
+}
+
+.report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.report-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.report-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.report-month-picker {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+}
+
+.report-toggle {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sophos-slate);
+  transition: all 0.15s;
+}
+.report-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sophos-white);
+}
+.report-toggle.active {
+  background: var(--sophos-blue);
+  color: var(--sophos-white);
+}
+
+/* Summary cards */
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.summary-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--card-radius);
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.summary-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--sophos-white);
+  line-height: 1.2;
+}
+
+.summary-card-label {
+  font-size: 0.78rem;
+  color: var(--sophos-slate);
+  margin-top: 4px;
+}
+
+.summary-card-sub {
+  font-size: 0.72rem;
+  color: var(--sophos-slate);
+  margin-top: 2px;
+}
+
+/* Week row */
+.report-week {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--card-radius);
+  margin-bottom: var(--spacing-md);
+  overflow: hidden;
+}
+
+.report-week-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.report-week-body {
+  padding: var(--spacing-md);
+}
+
+.report-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sophos-slate);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+}
+.report-section-title:first-child {
+  margin-top: 0;
+}
+
+/* Cadence timeline visualization */
+.cadence-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cadence-timeline-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.78rem;
+  padding: 2px 0;
+}
+
+.cadence-timeline-label {
+  width: 200px;
+  min-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sophos-slate);
+}
+
+.cadence-timeline-label.completed {
+  color: var(--sophos-white);
+}
+
+.cadence-timeline-label.missed {
+  color: rgba(234, 0, 34, 0.6);
+}
+
+/* Day-of-week bar showing when items were completed */
+.cadence-day-bar {
+  flex: 1;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cadence-day-bar-labels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+  pointer-events: none;
+}
+
+.cadence-day-bar-labels span {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.15);
+  line-height: 20px;
+}
+
+.cadence-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sophos-cyber-blue);
+  top: 5px;
+  transform: translateX(-5px);
+}
+
+.cadence-timeline-time {
+  width: 100px;
+  min-width: 100px;
+  font-size: 0.72rem;
+  color: var(--sophos-cyber-blue);
+  text-align: right;
+}
+
+.cadence-timeline-time.missed {
+  color: var(--sophos-red);
+}
+
+/* Honesty indicator */
+.honesty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.honesty-badge.good {
+  background: rgba(0, 223, 88, 0.15);
+  color: var(--sophos-green);
+}
+.honesty-badge.warning {
+  background: rgba(242, 148, 0, 0.15);
+  color: var(--sophos-orange);
+}
+.honesty-badge.concern {
+  background: rgba(234, 0, 34, 0.15);
+  color: var(--sophos-red);
+}
+
+/* Meetings grid */
+.report-meetings-grid {
+  display: flex;
+  gap: var(--spacing-lg);
+  font-size: 0.85rem;
+}
+
+.report-meeting-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.report-meeting-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.report-meeting-value.on-target {
+  color: var(--sophos-cyber-green);
+}
+
+.report-meeting-value.below-target {
+  color: var(--sophos-orange);
+}
+
+.report-meeting-label {
+  font-size: 0.72rem;
+  color: var(--sophos-slate);
+}
+
+/* Todos bar chart */
+.report-todo-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+}
+
+.report-todo-bar-label {
+  width: 140px;
+  min-width: 140px;
+  color: var(--sophos-slate);
+}
+
+.report-todo-bar-track {
+  flex: 1;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+}
+
+.report-todo-bar-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.report-todo-bar-count {
+  width: 50px;
+  min-width: 50px;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--sophos-slate);
+}
+
+/* --- Print styles --- */
 @media print {
-  .sidebar { display: none; }
-  .app-layout { grid-template-columns: 1fr; }
-  .header { position: static; }
+  body {
+    background: white !important;
+    color: #001A47 !important;
+    font-size: 11pt;
+  }
+
+  .app-layout,
+  .sidebar,
+  .header,
+  .main-content {
+    display: none !important;
+  }
+
+  .report-overlay {
+    position: static !important;
+    background: white !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .report-overlay * {
+    color: #001A47 !important;
+    border-color: #ddd !important;
+  }
+
+  .report-header .btn-primary,
+  .report-header .btn-secondary,
+  .report-header .btn-icon,
+  .report-controls .report-toggle,
+  .report-controls .report-month-picker,
+  .report-controls button {
+    display: none !important;
+  }
+
+  .report-title {
+    font-size: 16pt !important;
+    margin-bottom: 8pt;
+  }
+
+  .summary-card {
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .summary-card-value {
+    color: #001A47 !important;
+  }
+
+  .report-week {
+    break-inside: avoid;
+    background: white !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .cadence-day-bar {
+    background: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cadence-dot {
+    background: #2006F7 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .honesty-badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-todo-bar-track {
+    background: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-todo-bar-fill {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cadence-timeline-time,
+  .cadence-timeline-label.completed {
+    color: #001A47 !important;
+  }
+
+  .cadence-timeline-time.missed,
+  .cadence-timeline-label.missed {
+    color: #EA0022 !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
 }

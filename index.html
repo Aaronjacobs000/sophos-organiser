@@ -27,6 +27,10 @@
         <button class="btn-secondary btn-sm" @click="$store.app.goToCurrentWeek()" x-show="!$store.app.isViewingCurrentWeek">Today</button>
       </div>
       <div class="header-right">
+        <button class="btn-secondary btn-sm" @click="$store.app.showReport = true" style="font-size:0.8rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><rect x="3" y="3" width="18" height="12" rx="2"/><polyline points="7 8 12 12 17 8"/></svg>
+          Reports
+        </button>
         <button class="btn-icon" @click="$store.app.showSettings = true" title="Settings"><svg><use href="#icon-settings"/></svg></button>
         <button class="btn-icon" @click="$store.app.exportData()" title="Export backup"><svg><use href="#icon-download"/></svg></button>
         <label class="btn-icon" title="Import backup" style="cursor:pointer"><svg><use href="#icon-upload"/></svg><input type="file" accept=".json" @change="$store.app.importData($event)" class="sr-only"></label>
@@ -574,6 +578,163 @@
         <div class="empty-state" x-show="$store.app.quickNotes.length === 0"><svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg><div>Your scratchpad is empty.</div></div>
       </section>
     </main>
+
+    <!-- ============ REPORTS OVERLAY ============ -->
+    <div class="report-overlay" x-show="$store.app.showReport" x-transition.opacity>
+      <div class="report-header">
+        <div class="report-title">
+          <img src="assets/sophos-logo-white.svg" alt="Sophos" style="height:22px;">
+          Monthly Activity Report — <span x-text="$store.app.reportMonthLabel"></span>
+        </div>
+        <div class="report-controls">
+          <input type="month" class="report-month-picker" x-model="$store.app.reportMonth">
+          <button class="report-toggle" :class="{ active: $store.app.reportShow.cadence }" @click="$store.app.toggleReportSection('cadence')">Cadence</button>
+          <button class="report-toggle" :class="{ active: $store.app.reportShow.todos }" @click="$store.app.toggleReportSection('todos')">To-Dos</button>
+          <button class="report-toggle" :class="{ active: $store.app.reportShow.meetings }" @click="$store.app.toggleReportSection('meetings')">Meetings</button>
+          <button class="report-toggle" :class="{ active: $store.app.reportShow.opportunities }" @click="$store.app.toggleReportSection('opportunities')">Opps</button>
+          <button class="report-toggle" :class="{ active: $store.app.reportShow.issues }" @click="$store.app.toggleReportSection('issues')">Issues</button>
+          <button class="btn-primary btn-sm" @click="$store.app.printReport()">Print / Export</button>
+          <button class="btn-icon" @click="$store.app.showReport = false" title="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <template x-if="$store.app.reportSummary">
+        <div class="report-summary">
+          <div class="summary-card" x-show="$store.app.reportShow.cadence">
+            <div class="summary-card-value" x-text="$store.app.reportSummary.cadence.pct + '%'"></div>
+            <div class="summary-card-label">Cadence Completion</div>
+            <div class="summary-card-sub" x-text="$store.app.reportSummary.cadence.completed + ' / ' + $store.app.reportSummary.cadence.total + ' items'"></div>
+          </div>
+          <div class="summary-card" x-show="$store.app.reportShow.cadence">
+            <div class="summary-card-value" :style="$store.app.reportSummary.honesty.concernWeeks > 0 ? 'color:var(--sophos-red)' : ($store.app.reportSummary.honesty.warningWeeks > 0 ? 'color:var(--sophos-orange)' : 'color:var(--sophos-green)')">
+              <span x-text="$store.app.reportSummary.honesty.concernWeeks + $store.app.reportSummary.honesty.warningWeeks"></span>
+            </div>
+            <div class="summary-card-label">Weeks Flagged</div>
+            <div class="summary-card-sub">Cadence completed in a rush</div>
+          </div>
+          <div class="summary-card" x-show="$store.app.reportShow.todos">
+            <div class="summary-card-value" x-text="$store.app.reportSummary.todos.pct + '%'"></div>
+            <div class="summary-card-label">Task Completion</div>
+            <div class="summary-card-sub" x-text="$store.app.reportSummary.todos.completed + ' / ' + $store.app.reportSummary.todos.total + ' tasks'"></div>
+          </div>
+          <div class="summary-card" x-show="$store.app.reportShow.meetings">
+            <div class="summary-card-value" x-text="$store.app.reportSummary.meetings.avgPerWeek"></div>
+            <div class="summary-card-label">Avg Meetings / Week</div>
+            <div class="summary-card-sub" x-text="$store.app.reportSummary.meetings.total + ' total (' + $store.app.reportSummary.meetings.cq + ' CQ, ' + $store.app.reportSummary.meetings.nq + ' NQ, ' + $store.app.reportSummary.meetings.partner + ' Partner)'"></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Per-week breakdown -->
+      <template x-for="week in $store.app.reportData" :key="week.weekKey">
+        <div class="report-week">
+          <div class="report-week-header">
+            <span x-text="week.weekKey + ' — ' + week.weekLabel"></span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="honesty-badge" :class="week.cadence.honestyFlag" x-show="$store.app.reportShow.cadence">
+                <span x-text="week.cadence.honestyFlag === 'good' ? '✓' : week.cadence.honestyFlag === 'warning' ? '⚠' : '⚠'"></span>
+                <span x-text="week.cadence.honestyNote || (week.cadence.honestyFlag === 'good' ? 'Good spread' : '')"></span>
+              </span>
+              <span style="font-size:0.78rem;color:var(--sophos-slate);" x-text="'Cadence ' + week.cadence.completed + '/' + week.cadence.total" x-show="$store.app.reportShow.cadence"></span>
+            </div>
+          </div>
+          <div class="report-week-body">
+
+            <!-- Cadence Timeline -->
+            <template x-if="$store.app.reportShow.cadence">
+              <div>
+                <div class="report-section-title">Cadence Activity — When Items Were Completed</div>
+                <div class="cadence-timeline">
+                  <template x-for="item in week.cadence.results" :key="item.id">
+                    <div class="cadence-timeline-row">
+                      <span class="cadence-timeline-label" :class="{ completed: item.completed, missed: !item.completed }" x-text="item.label"></span>
+                      <div class="cadence-day-bar">
+                        <div class="cadence-day-bar-labels">
+                          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span>
+                        </div>
+                        <!-- Dot showing when it was completed (position = day of week) -->
+                        <template x-if="item.completed && item.dayOfWeek !== null">
+                          <div class="cadence-dot" :style="`left: ${((item.dayOfWeek === 0 ? 7 : item.dayOfWeek) - 1) / 4 * 100}%`"
+                               :title="item.timeLabel"></div>
+                        </template>
+                      </div>
+                      <span class="cadence-timeline-time" :class="{ missed: !item.completed }"
+                            x-text="item.completed ? item.timeLabel : 'Not completed'"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+
+            <!-- Meetings -->
+            <template x-if="$store.app.reportShow.meetings">
+              <div>
+                <div class="report-section-title">Meetings</div>
+                <div class="report-meetings-grid">
+                  <div class="report-meeting-stat">
+                    <div class="report-meeting-value" :class="week.meetings.customerCQ >= 7 ? 'on-target' : 'below-target'" x-text="week.meetings.customerCQ"></div>
+                    <div class="report-meeting-label">Customer CQ (target 7)</div>
+                  </div>
+                  <div class="report-meeting-stat">
+                    <div class="report-meeting-value" :class="week.meetings.customerNQ >= 3 ? 'on-target' : 'below-target'" x-text="week.meetings.customerNQ"></div>
+                    <div class="report-meeting-label">Customer NQ (target 3)</div>
+                  </div>
+                  <div class="report-meeting-stat">
+                    <div class="report-meeting-value" :class="week.meetings.partner >= 2 ? 'on-target' : 'below-target'" x-text="week.meetings.partner"></div>
+                    <div class="report-meeting-label">Partner (target 2)</div>
+                  </div>
+                  <div class="report-meeting-stat">
+                    <div class="report-meeting-value" x-text="week.meetings.total"></div>
+                    <div class="report-meeting-label">Total</div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Todos by Category -->
+            <template x-if="$store.app.reportShow.todos">
+              <div>
+                <div class="report-section-title">Tasks — <span x-text="week.todos.completed + '/' + week.todos.total + ' completed'"></span></div>
+                <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
+                  <div class="report-todo-bar" x-show="week.todos.byCategory[key]?.total > 0">
+                    <span class="report-todo-bar-label" x-text="cat.label"></span>
+                    <div class="report-todo-bar-track">
+                      <div class="report-todo-bar-fill" :style="`width: ${week.todos.byCategory[key]?.total > 0 ? (week.todos.byCategory[key].completed / week.todos.byCategory[key].total * 100) : 0}%; background-color: ${cat.color}`"></div>
+                    </div>
+                    <span class="report-todo-bar-count" x-text="week.todos.byCategory[key]?.completed + '/' + week.todos.byCategory[key]?.total"></span>
+                  </div>
+                </template>
+                <div style="font-size:0.78rem;color:var(--sophos-slate);padding:4px 0;" x-show="week.todos.total === 0">No tasks this week</div>
+              </div>
+            </template>
+
+            <!-- Opps & Issues summary -->
+            <template x-if="$store.app.reportShow.opportunities || $store.app.reportShow.issues">
+              <div>
+                <div class="report-section-title">Pipeline & Issues</div>
+                <div style="display:flex;gap:var(--spacing-lg);font-size:0.85rem;">
+                  <div x-show="$store.app.reportShow.opportunities">
+                    <span style="color:var(--sophos-cyber-green);font-weight:600;" x-text="week.opportunities.withNextStep"></span>
+                    <span class="text-muted"> opp next steps this week</span>
+                  </div>
+                  <div x-show="$store.app.reportShow.issues">
+                    <span style="color:var(--sophos-orange);font-weight:600;" x-text="week.issues.withNextStep"></span>
+                    <span class="text-muted"> issue next steps this week</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <div class="empty-state" x-show="$store.app.reportData.length === 0" style="padding:40px 0;">
+        <div>No data for this month. Select a different month above.</div>
+      </div>
+    </div>
 
     <!-- ============ SETTINGS MODAL ============ -->
     <div class="modal-backdrop" x-show="$store.app.showSettings" x-transition.opacity @click.self="$store.app.showSettings = false">
