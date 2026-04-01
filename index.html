@@ -492,10 +492,6 @@
                 <div class="meddpicc-title">MEDDPICC Qualification <span class="meddpicc-score" :class="{ low: $store.app.getMeddpiccScore(opp) <= 3, medium: $store.app.getMeddpiccScore(opp) > 3 && $store.app.getMeddpiccScore(opp) <= 6, high: $store.app.getMeddpiccScore(opp) > 6 }" x-text="$store.app.getMeddpiccScore(opp) + ' / 8'"></span></div>
                 <div class="meddpicc-grid"><template x-for="field in MEDDPICC_FIELDS" :key="field.key"><div class="meddpicc-field"><label x-text="field.label"></label><input type="text" :placeholder="field.hint" :value="opp.meddpicc ? opp.meddpicc[field.key] : ''" @input="$store.app.updateMeddpicc(opp.id, field.key, $event.target.value)"></div></template></div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:8px;">
-                <button class="btn-danger btn-sm" @click="$store.app.archiveOpportunity(opp.id)">Archive</button>
-                <button class="btn-danger btn-sm" style="background:transparent;color:var(--sophos-red);border:1px solid var(--sophos-red);" @click="$store.app.deleteOpportunity(opp.id)">Delete</button>
-              </div>
             </div>
           </div>
         </template>
