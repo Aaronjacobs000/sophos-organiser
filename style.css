@@ -2017,6 +2017,120 @@ textarea {
   color: var(--sophos-white);
 }
 
+/* --- Setup Wizard --- */
+.wizard-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--sophos-dark-blue) 0%, var(--sophos-deep-purple) 100%);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wizard-card {
+  max-width: 560px;
+  width: 90%;
+  text-align: center;
+}
+
+.wizard-logo {
+  height: 36px;
+  margin-bottom: var(--spacing-xl);
+}
+
+.wizard-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+.wizard-subtitle {
+  color: var(--sophos-slate);
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-xl);
+}
+
+.wizard-name-input {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  text-align: center;
+  border-radius: var(--card-radius);
+  margin-bottom: var(--spacing-xl);
+}
+
+.wizard-roles {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.wizard-role-btn {
+  flex: 1;
+  max-width: 240px;
+  padding: var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--card-radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.wizard-role-btn:hover {
+  border-color: var(--sophos-blue);
+  background: rgba(32, 6, 247, 0.08);
+  transform: translateY(-2px);
+}
+
+.wizard-role-btn svg {
+  width: 40px;
+  height: 40px;
+  stroke: var(--sophos-cyber-blue);
+  fill: none;
+  stroke-width: 1.25;
+  margin-bottom: var(--spacing-sm);
+}
+
+.wizard-role-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+.wizard-role-desc {
+  font-size: 0.78rem;
+  color: var(--sophos-slate);
+  line-height: 1.4;
+}
+
+/* Template buttons in settings */
+.template-btn-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-sm);
+}
+
+.template-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--sophos-slate);
+  transition: all 0.15s;
+}
+
+.template-btn:hover {
+  background: rgba(32, 6, 247, 0.12);
+  border-color: var(--sophos-blue);
+  color: var(--sophos-white);
+}
+
 /* --- Reports Overlay --- */
 .report-overlay {
   position: fixed;

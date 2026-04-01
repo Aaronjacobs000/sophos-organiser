@@ -19,6 +19,7 @@
       <div class="header-left">
         <img src="assets/sophos-logo-white.svg" alt="Sophos" class="header-logo">
         <span class="header-title">Personal Organiser</span>
+        <span style="font-size:0.78rem;color:var(--sophos-slate);margin-left:4px;" x-show="$store.app.settings.userName" x-text="'— ' + ($store.app.settings.userName || '')"></span>
       </div>
       <div class="header-center">
         <button class="btn-icon" @click="$store.app.goToWeek(-1)" title="Previous week (Ctrl+←)"><svg><use href="#icon-chevron-left"/></svg></button>
@@ -579,6 +580,29 @@
       </section>
     </main>
 
+    <!-- ============ SETUP WIZARD ============ -->
+    <div class="wizard-overlay" x-show="$store.app.showWizard">
+      <div class="wizard-card">
+        <img src="assets/sophos-logo-white.svg" alt="Sophos" class="wizard-logo">
+        <div class="wizard-title">Welcome to the Personal Organiser</div>
+        <div class="wizard-subtitle">Enter your name and select your role to get started with the right cadence template.</div>
+        <input type="text" class="wizard-name-input" placeholder="Your name" x-model="$store.app.wizardName" @keydown.enter="if($store.app.wizardName.trim()) {}">
+        <div style="color:var(--sophos-slate);font-size:0.82rem;margin-bottom:var(--spacing-md);">I am a...</div>
+        <div class="wizard-roles">
+          <button class="wizard-role-btn" @click="$store.app.completeWizard('tae')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <div class="wizard-role-title">Sales Executive</div>
+            <div class="wizard-role-desc">Territory Account Executive. Pipeline management, prospecting, forecasting, partner engagement.</div>
+          </button>
+          <button class="wizard-role-btn" @click="$store.app.completeWizard('se')">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <div class="wizard-role-title">Sales Engineer</div>
+            <div class="wizard-role-desc">Technical pre-sales. Customer engagements, solution design, security assessments, SFDC hygiene.</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ REPORTS OVERLAY ============ -->
     <div class="report-overlay" x-show="$store.app.showReport" x-transition.opacity>
       <div class="report-header">
@@ -754,8 +778,16 @@
             Cadence Items
             <div style="display:flex;gap:4px;">
               <button class="btn-secondary btn-sm" @click="$store.app.showAddCadence = !$store.app.showAddCadence" style="text-transform:none;letter-spacing:0;font-size:0.75rem;">+ Add</button>
-              <button class="btn-secondary btn-sm" @click="$store.app.resetCadenceToDefaults()" style="text-transform:none;letter-spacing:0;font-size:0.75rem;">Reset</button>
             </div>
+          </div>
+          <div class="template-btn-row">
+            <span style="font-size:0.75rem;color:var(--sophos-slate);line-height:28px;">Load template:</span>
+            <template x-for="[key, tmpl] in Object.entries(CADENCE_TEMPLATES)" :key="key">
+              <button class="template-btn" @click="$store.app.loadCadenceTemplate(key, false)" :title="'Add ' + tmpl.label + ' items (keeps existing)'">
+                <span x-text="'+ ' + tmpl.label"></span>
+              </button>
+            </template>
+            <button class="template-btn" style="color:var(--sophos-red);border-color:rgba(234,0,34,0.3);" @click="if(confirm('Remove all cadence items?')) { $store.app.settings.cadenceItems = []; }" title="Clear all cadence items">Clear All</button>
           </div>
           <!-- Add cadence form -->
           <div class="add-form-panel" x-show="$store.app.showAddCadence" x-transition.opacity style="margin-bottom:8px;padding:8px;">

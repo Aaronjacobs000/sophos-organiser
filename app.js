@@ -63,23 +63,59 @@ const CADENCE_FREQUENCIES = {
   monthly: { label: 'Monthly' },
 };
 
-const DEFAULT_CADENCE_ITEMS = [
-  { id: 'se-standup',      label: 'SE Weekly Action Plan',           duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review prior actions, align SE activities, solution map priorities' },
-  { id: 'p-matrix',        label: 'P-Matrix Activity Plan',          duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review P-Matrix accounts, plan engagement & resources, expansion discovery' },
-  { id: 'focus-30',        label: 'Focus 30 Expansion Review',       duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review Focus 30 list, targeted sales plays, research customers' },
-  { id: 'territory-review',label: 'Territory Plan Review',           duration: '30min', day: 'Mon', frequency: 'weekly', description: 'P-Matrix progress, Focus 30 progress, NB initiatives, adjust plan' },
-  { id: 'deal-reg',        label: 'Deal Reg Call Downs',             duration: '30min', day: 'Tue', frequency: 'weekly', description: 'Review & follow up on deal registrations, BANT qualify, partner alignment' },
-  { id: 'coat-tailing',    label: 'Coat Tailing Research',           duration: '30min', day: 'Tue', frequency: 'weekly', description: 'LinkedIn cross-reference, track customer contact movements, outreach list' },
-  { id: 'prospecting',     label: 'New Logo Prospecting',            duration: '60min', day: 'Wed', frequency: 'weekly', description: 'Market research, customer references, PBI whitespace, partner prospecting' },
-  { id: 'sdr-calldowns',   label: 'SDR / Mktg Follow-up',           duration: '30min', day: 'Thu', frequency: 'weekly', description: 'Review SDR leads (within 48hrs), Clari dashboard, outbound campaign alignment' },
-  { id: 'forecast-prep',   label: 'Forecast Prep & Deal Updates',    duration: '30min', day: 'Fri', frequency: 'weekly', description: 'Submit Clari forecast (Wed CoB), top 15 deal updates, MEDDPICC review for +$30K' },
-  { id: 'renewal-cadence', label: 'Renewal Cadence',                 duration: '30min', day: 'Mon', frequency: 'fortnightly', description: 'Cross-sell accounts from ATR, highlight at-risk, RAM vs TAE alignment' },
-  { id: 'csm-cadence',     label: 'CSM Cadence',                     duration: '30min', day: 'Fri', frequency: 'fortnightly', description: 'Review CSM-led activity, account feedback, actions for review' },
-  { id: 'channel-cadence', label: 'Channel Cadence / Adopt a Rep',   duration: '30min', day: 'Wed', frequency: 'fortnightly', description: 'Managed partner activity, sponsor-a-rep review, joint engagement opps' },
-  { id: 'deal-review',     label: 'Week 2/8 Deal Review',            duration: '30min', day: 'Mon', frequency: 'monthly', description: 'Complete deal review template, identify key NB opps, steps to close' },
-  { id: 'enablement',      label: 'Enablement',                      duration: '60min', day: 'Thu', frequency: 'monthly', description: 'Mindtickle training, compliance training, ad-hoc learning' },
-  { id: 'month-review',    label: 'Month in Review',                 duration: '30min', day: 'Fri', frequency: 'monthly', description: 'Territory performance, wins/losses analysis, activity performance, share in GTM' },
-];
+// --- Role Templates ---
+const CADENCE_TEMPLATES = {
+  tae: {
+    label: 'Sales Executive (TAE)',
+    description: 'Territory Account Executive cadence from the ANZ Day-in-the-Life Handbook',
+    items: [
+      { id: 'se-standup',      label: 'SE Weekly Action Plan',           duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review prior actions, align SE activities, solution map priorities' },
+      { id: 'p-matrix',        label: 'P-Matrix Activity Plan',          duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review P-Matrix accounts, plan engagement & resources, expansion discovery' },
+      { id: 'focus-30',        label: 'Focus 30 Expansion Review',       duration: '30min', day: 'Mon', frequency: 'weekly', description: 'Review Focus 30 list, targeted sales plays, research customers' },
+      { id: 'territory-review',label: 'Territory Plan Review',           duration: '30min', day: 'Mon', frequency: 'weekly', description: 'P-Matrix progress, Focus 30 progress, NB initiatives, adjust plan' },
+      { id: 'deal-reg',        label: 'Deal Reg Call Downs',             duration: '30min', day: 'Tue', frequency: 'weekly', description: 'Review & follow up on deal registrations, BANT qualify, partner alignment' },
+      { id: 'coat-tailing',    label: 'Coat Tailing Research',           duration: '30min', day: 'Tue', frequency: 'weekly', description: 'LinkedIn cross-reference, track customer contact movements, outreach list' },
+      { id: 'prospecting',     label: 'New Logo Prospecting',            duration: '60min', day: 'Wed', frequency: 'weekly', description: 'Market research, customer references, PBI whitespace, partner prospecting' },
+      { id: 'sdr-calldowns',   label: 'SDR / Mktg Follow-up',           duration: '30min', day: 'Thu', frequency: 'weekly', description: 'Review SDR leads (within 48hrs), Clari dashboard, outbound campaign alignment' },
+      { id: 'forecast-prep',   label: 'Forecast Prep & Deal Updates',    duration: '30min', day: 'Fri', frequency: 'weekly', description: 'Submit Clari forecast (Wed CoB), top 15 deal updates, MEDDPICC review for +$30K' },
+      { id: 'renewal-cadence', label: 'Renewal Cadence',                 duration: '30min', day: 'Mon', frequency: 'fortnightly', description: 'Cross-sell accounts from ATR, highlight at-risk, RAM vs TAE alignment' },
+      { id: 'csm-cadence',     label: 'CSM Cadence',                     duration: '30min', day: 'Fri', frequency: 'fortnightly', description: 'Review CSM-led activity, account feedback, actions for review' },
+      { id: 'channel-cadence', label: 'Channel Cadence / Adopt a Rep',   duration: '30min', day: 'Wed', frequency: 'fortnightly', description: 'Managed partner activity, sponsor-a-rep review, joint engagement opps' },
+      { id: 'deal-review',     label: 'Week 2/8 Deal Review',            duration: '30min', day: 'Mon', frequency: 'monthly', description: 'Complete deal review template, identify key NB opps, steps to close' },
+      { id: 'enablement',      label: 'Enablement',                      duration: '60min', day: 'Thu', frequency: 'monthly', description: 'Mindtickle training, compliance training, ad-hoc learning' },
+      { id: 'month-review',    label: 'Month in Review',                 duration: '30min', day: 'Fri', frequency: 'monthly', description: 'Territory performance, wins/losses analysis, activity performance, share in GTM' },
+    ],
+  },
+  se: {
+    label: 'Sales Engineer (SE)',
+    description: 'Sales Engineer cadence from the FY26 SE Day-in-the-Life framework',
+    items: [
+      // Daily rhythm (represented as weekly items on specific days)
+      { id: 'se-dev-research',    label: 'Development / Research',          duration: '60min', day: 'Mon', frequency: 'weekly', description: 'Threat landscape, industry, competitive, cyber regulations, risk & compliance, LinkedIn learning, Mindtickle' },
+      { id: 'se-cust-engage-1',   label: 'Customer / Partner Engagement',   duration: '3hrs',  day: 'Mon', frequency: 'weekly', description: 'Customer/partner influence, thought leadership, solution definition, SE-led evaluations, POC criteria, security checkups' },
+      { id: 'se-cust-engage-2',   label: 'Customer / Partner Engagement',   duration: '3hrs',  day: 'Tue', frequency: 'weekly', description: 'Customer assessments, security checkups, delivered solution presentations, action follow-up on EWS/CAW alerts' },
+      { id: 'se-cust-engage-3',   label: 'Customer / Partner Engagement',   duration: '3hrs',  day: 'Wed', frequency: 'weekly', description: 'Partner contact: delivered presentations, webinars, enablement in aligned territory' },
+      { id: 'se-cust-engage-4',   label: 'Customer / Partner Engagement',   duration: '3hrs',  day: 'Thu', frequency: 'weekly', description: 'SE-led evaluations, POC criteria, customer assessments, respond to segment alerts' },
+      { id: 'se-cust-engage-5',   label: 'Customer / Partner Engagement',   duration: '3hrs',  day: 'Fri', frequency: 'weekly', description: 'Customer/partner influence, solution definition, delivered solution presentations' },
+      { id: 'se-sfdc-hygiene',    label: 'SFDC Hygiene',                    duration: '30min', day: 'Tue', frequency: 'weekly', description: 'Update opportunity/account, SE Engaged/PS-SE internal notes, SE milestones, add tasks/events/notes, security checkup & channel activity' },
+      // Weekly SE-specific
+      { id: 'se-team-call',       label: 'SE Team Call',                    duration: '60min', day: 'Mon', frequency: 'weekly', description: '1x 1hr SE Team Call, +20K opportunity review, technical development needs' },
+      { id: 'se-milestone-review',label: 'SE Milestone Activities',         duration: '60min', day: 'Wed', frequency: 'weekly', description: '10x customer/partner SE milestone activities: demos, strategic account planning, escalations, resource discussions, review technical opp status' },
+      { id: 'se-opp-review',      label: 'Top 20 Opportunity Review',      duration: '30min', day: 'Thu', frequency: 'weekly', description: 'Review technical opportunity status for top 20 opps in SFDC with SEM' },
+      { id: 'se-rfx-responses',   label: 'RFx Responses',                  duration: '30min', day: 'Fri', frequency: 'weekly', description: 'Respond to qualified RFx requirements' },
+      // Monthly SE items
+      { id: 'se-1on1-sem',        label: '1:1 with SEM',                   duration: '60min', day: 'Mon', frequency: 'monthly', description: '2x 1hr 1:1 with SEM: personal development, coaching, Sophskills completion' },
+      { id: 'se-monthly-bu',      label: 'Monthly BU / PM Calls',          duration: '30min', day: 'Thu', frequency: 'monthly', description: 'Attend all internal monthly BU/PM calls, refer to recordings within 7 days' },
+      { id: 'se-partner-intimacy',label: 'Partner Intimacy',               duration: '60min', day: 'Wed', frequency: 'monthly', description: 'Connect with technical contacts in 10 aligned strategic partners, SE shadowing, partner POC/evaluation support, partner security checkups' },
+      { id: 'se-p-matrix-update', label: 'P-Matrix Tech Status Update',    duration: '30min', day: 'Fri', frequency: 'monthly', description: 'P-Matrix tech status aligned & discussed with TAE, channel activities updated with CAE' },
+      // Quarterly SE items (mapped as monthly — user can adjust)
+      { id: 'se-security-checks', label: 'Security Checkups (Quarterly)',   duration: '60min', day: 'Tue', frequency: 'monthly', description: '9 SE-led security checkups per quarter with recommendations, 1 assessment per quarter (TT exercise, NIST, NIS2)' },
+      { id: 'se-threat-profiles', label: 'Threat Profile Assessments',     duration: '60min', day: 'Wed', frequency: 'monthly', description: '10 threat profile assessments per quarter, solution map completion for priority opps (+$30K ACV)' },
+    ],
+  },
+};
+
+const DEFAULT_CADENCE_ITEMS = CADENCE_TEMPLATES.tae.items;
 
 function getCadenceIds(items) { return items.map(i => i.id); }
 
@@ -460,6 +496,8 @@ document.addEventListener('alpine:init', () => {
     showAddCadence: false,
     editingCadence: null,
     newCadence: { label: '', duration: '30min', day: 'Mon', frequency: 'weekly', description: '' },
+    showWizard: !loaded, // Show wizard on first run (no existing data)
+    wizardName: '',
     showReport: false,
     reportMonth: formatDate(new Date()).substring(0, 7), // YYYY-MM
     reportShow: { cadence: true, todos: true, meetings: true, opportunities: true, issues: true },
@@ -722,6 +760,32 @@ document.addEventListener('alpine:init', () => {
     resetCadenceToDefaults() {
       if (!confirm('Reset cadence items to handbook defaults? Your custom items will be lost.')) return;
       this.settings.cadenceItems = JSON.parse(JSON.stringify(DEFAULT_CADENCE_ITEMS));
+      debouncedSave(this);
+    },
+
+    loadCadenceTemplate(templateKey, replace) {
+      const template = CADENCE_TEMPLATES[templateKey];
+      if (!template) return;
+      if (replace) {
+        this.settings.cadenceItems = JSON.parse(JSON.stringify(template.items));
+      } else {
+        // Append — add items with new IDs to avoid conflicts
+        const existing = new Set(this.settings.cadenceItems.map(i => i.label));
+        template.items.forEach(item => {
+          if (!existing.has(item.label)) {
+            this.settings.cadenceItems.push({ ...JSON.parse(JSON.stringify(item)), id: generateId('cad') });
+          }
+        });
+      }
+      debouncedSave(this);
+    },
+
+    // --- Setup Wizard ---
+    completeWizard(role) {
+      this.settings.role = role;
+      if (this.wizardName.trim()) this.settings.userName = this.wizardName.trim();
+      this.settings.cadenceItems = JSON.parse(JSON.stringify(CADENCE_TEMPLATES[role]?.items || DEFAULT_CADENCE_ITEMS));
+      this.showWizard = false;
       debouncedSave(this);
     },
 
