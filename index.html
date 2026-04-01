@@ -423,8 +423,12 @@
           <div class="add-form-actions"><button class="btn-primary" @click="$store.app.submitOpportunity()">Save Opportunity</button><button class="btn-secondary" @click="$store.app.showAddOpp = false">Cancel</button></div>
         </div>
         <div class="filter-bar">
-          <template x-for="[type, label] in [['all','All'],['newLogo','New Logo'],['expansion','Expansion'],['renewal','Renewal']]" :key="type">
-            <button class="filter-btn" :class="{ active: $store.app.oppFilter === type }" @click="$store.app.oppFilter = type"><span x-text="label"></span><span class="count-badge" x-text="$store.app.oppCountByType(type)"></span></button>
+          <template x-for="[key, label] in [['open','Open'],['closed','Closed'],['all','All']]" :key="key">
+            <button class="filter-btn" :class="{ active: $store.app.oppFilter === key }" @click="$store.app.oppFilter = key"><span x-text="label"></span><span class="count-badge" x-text="$store.app.oppCount(key, $store.app.oppTypeFilter)"></span></button>
+          </template>
+          <span style="width:1px;height:20px;background:rgba(255,255,255,0.1);"></span>
+          <template x-for="[type, label] in [['all','All Types'],['newLogo','New Logo'],['expansion','Expansion'],['renewal','Renewal']]" :key="type">
+            <button class="filter-btn" :class="{ active: $store.app.oppTypeFilter === type }" @click="$store.app.oppTypeFilter = type"><span x-text="label"></span></button>
           </template>
           <div class="sort-controls">
             <select x-model="$store.app.oppSort"><option value="expectedCloseDate">Close Date</option><option value="dealSize">Deal Size</option><option value="priority">Priority</option><option value="accountName">Account</option></select>

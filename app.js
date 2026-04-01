@@ -445,7 +445,8 @@ document.addEventListener('alpine:init', () => {
     newOpp: { accountName: '', dealSize: '', type: 'newLogo', stage: '', salesforceLink: '', expectedCloseDate: '', notes: '', nextStepDate: '', nextStepText: '' },
     expandedOpp: null,
     newOppNote: '',
-    oppFilter: 'all',
+    oppFilter: 'open',
+    oppTypeFilter: 'all',
     oppSort: 'expectedCloseDate',
     oppSortAsc: true,
     showAddIssue: false,
@@ -762,7 +763,11 @@ document.addEventListener('alpine:init', () => {
     // --- Opportunities ---
     get filteredOpportunities() {
       let opps = this.opportunities.filter(o => !o.archived);
-      if (this.oppFilter !== 'all') opps = opps.filter(o => o.type === this.oppFilter);
+      // Status filter
+      if (this.oppFilter === 'open') opps = opps.filter(o => (o.status || 'open') === 'open');
+      else if (this.oppFilter === 'closed') opps = opps.filter(o => o.status === 'closed');
+      // Type filter
+      if (this.oppTypeFilter !== 'all') opps = opps.filter(o => o.type === this.oppTypeFilter);
       const sortKey = this.oppSort, asc = this.oppSortAsc;
       opps.sort((a, b) => {
         let va = a[sortKey], vb = b[sortKey];
@@ -772,7 +777,13 @@ document.addEventListener('alpine:init', () => {
       });
       return opps;
     },
-    oppCountByType(type) { return this.opportunities.filter(o => !o.archived && (type === 'all' || o.type === type)).length; },
+    oppCount(statusFilter, typeFilter) {
+      let opps = this.opportunities.filter(o => !o.archived);
+      if (statusFilter === 'open') opps = opps.filter(o => (o.status || 'open') === 'open');
+      else if (statusFilter === 'closed') opps = opps.filter(o => o.status === 'closed');
+      if (typeFilter !== 'all') opps = opps.filter(o => o.type === typeFilter);
+      return opps.length;
+    },
     submitOpportunity() {
       if (!this.newOpp.accountName.trim()) return;
       const initialNotes = this.newOpp.notes.trim()
