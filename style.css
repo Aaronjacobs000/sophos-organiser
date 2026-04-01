@@ -2325,10 +2325,14 @@ textarea {
     font-size: 11pt;
   }
 
-  .app-layout,
+  .app-layout {
+    display: block !important;
+  }
+
   .sidebar,
   .header,
-  .main-content {
+  .main-content,
+  .modal-backdrop {
     display: none !important;
   }
 
@@ -2337,6 +2341,7 @@ textarea {
     background: white !important;
     padding: 0 !important;
     overflow: visible !important;
+    z-index: auto !important;
   }
 
   .report-overlay * {
