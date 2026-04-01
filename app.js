@@ -445,22 +445,29 @@ document.addEventListener('alpine:init', () => {
     initial.currentWeekKey = realWeekKey;
   }
 
-  // Async: try to load from data.json file (takes priority if available)
+  // Async: try to load from data.json file (takes priority over localStorage)
   loadDataFromFile().then(fileData => {
+    const store = Alpine.store('app');
     if (fileData) {
-      const store = Alpine.store('app');
       const rk = getISOWeekKey(new Date());
       initializeWeek(fileData, rk);
       if (fileData.currentWeekKey !== rk) fileData.currentWeekKey = rk;
-      // Merge file data into the live store
       Object.assign(store, fileData);
       store.viewingWeekKey = fileData.currentWeekKey;
       store.today = getToday();
+      store.showWizard = false; // Has data, skip wizard
       console.log('Loaded data from data.json');
     } else if (_useFileAPI) {
-      // Server is running but no file yet — save current state to create it
-      saveData(Alpine.store('app'));
-      console.log('Created data.json from current state');
+      // Server running but no data.json — this is a FRESH instance.
+      // Ignore any stale localStorage from another folder on the same port.
+      // Clear localStorage to avoid cross-folder bleed, start clean.
+      localStorage.removeItem(STORAGE_KEY);
+      const fresh = createDefaultState();
+      Object.assign(store, fresh);
+      store.viewingWeekKey = fresh.currentWeekKey;
+      store.today = getToday();
+      store.showWizard = true; // Show wizard for new instance
+      console.log('Fresh instance — cleared stale localStorage, showing wizard');
     }
   });
 
