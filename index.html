@@ -344,11 +344,11 @@
                 <template x-for="note in (todo.notes || [])" :key="note.id">
                   <div class="todo-note-entry">
                     <div class="todo-note-ts" x-text="formatTimestamp(note.timestamp)"></div>
-                    <div class="todo-note-text" x-text="note.text"></div>
+                    <div class="todo-note-text" x-html="linkifyText(note.text)"></div>
                   </div>
                 </template>
                 <div class="todo-add-note-row">
-                  <input type="text" placeholder="Add a note..." x-model="$store.app.todoNoteText" @keydown.enter="$store.app.addTodoNote(todo.id)">
+                  <textarea placeholder="Add a note..." x-model="$store.app.todoNoteText" @keydown.enter.prevent="if(!$event.shiftKey) $store.app.addTodoNote(todo.id)" rows="2"></textarea>
                   <button class="btn-primary btn-sm" @click="$store.app.addTodoNote(todo.id)">Add</button>
                 </div>
               </div>
@@ -479,12 +479,12 @@
                 <template x-for="note in (Array.isArray(opp.notes) ? opp.notes : [])" :key="note.id">
                   <div class="issue-note-item">
                     <div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div>
-                    <div class="issue-note-text" x-text="note.text"></div>
+                    <div class="issue-note-text" x-html="linkifyText(note.text)"></div>
                   </div>
                 </template>
                 <div class="empty-state" x-show="!Array.isArray(opp.notes) || opp.notes.length === 0" style="padding:4px 0;"><div class="text-muted" style="font-size:0.82rem;">No notes yet.</div></div>
                 <div class="add-note-form">
-                  <input type="text" placeholder="Add a note..." x-model="$store.app.newOppNote" @keydown.enter="$store.app.addOppNote(opp.id)">
+                  <textarea placeholder="Add a note..." x-model="$store.app.newOppNote" @keydown.enter.prevent="if(!$event.shiftKey) $store.app.addOppNote(opp.id)" rows="2"></textarea>
                   <button class="btn-primary btn-sm" @click="$store.app.addOppNote(opp.id)">Add</button>
                 </div>
               </div>
@@ -550,8 +550,8 @@
               </div>
               <!-- Notes -->
               <div class="form-label" style="margin-bottom:4px;">Notes</div>
-              <template x-for="note in issue.notes" :key="note.id"><div class="issue-note-item"><div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="issue-note-text" x-text="note.text"></div></div></template>
-              <div class="add-note-form"><input type="text" placeholder="Add a note..." x-model="$store.app.newIssueNote" @keydown.enter="$store.app.addIssueNote(issue.id)"><button class="btn-primary btn-sm" @click="$store.app.addIssueNote(issue.id)">Add</button></div>
+              <template x-for="note in issue.notes" :key="note.id"><div class="issue-note-item"><div class="issue-note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="issue-note-text" x-html="linkifyText(note.text)"></div></div></template>
+              <div class="add-note-form"><textarea placeholder="Add a note..." x-model="$store.app.newIssueNote" @keydown.enter.prevent="if(!$event.shiftKey) $store.app.addIssueNote(issue.id)" rows="2"></textarea><button class="btn-primary btn-sm" @click="$store.app.addIssueNote(issue.id)">Add</button></div>
               <div style="margin-top:8px;"><button class="btn-danger btn-sm" @click="$store.app.deleteIssue(issue.id)">Remove</button></div>
             </div>
           </div>
@@ -569,7 +569,7 @@
         <div class="notes-search" x-show="$store.app.quickNotes.length > 0"><input type="text" placeholder="Search notes..." x-model="$store.app.notesSearch"></div>
         <template x-for="note in $store.app.filteredNotes" :key="note.id">
           <div class="note-card" :class="{ pinned: note.pinned }">
-            <div class="note-body"><div class="note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="note-text" x-text="note.text"></div></div>
+            <div class="note-body"><div class="note-timestamp" x-text="formatTimestamp(note.timestamp)"></div><div class="note-text" x-html="linkifyText(note.text)"></div></div>
             <div class="note-actions">
               <button :class="{ 'pin-active': note.pinned }" @click="$store.app.togglePinNote(note.id)" :title="note.pinned ? 'Unpin' : 'Pin'"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><use href="#icon-pin"/></svg></button>
               <button @click="$store.app.deleteNote(note.id)" title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5"><use href="#icon-trash"/></svg></button>

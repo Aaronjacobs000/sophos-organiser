@@ -1087,12 +1087,18 @@ textarea {
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
 }
+.add-note-form textarea,
 .add-note-form input {
   flex: 1;
   background: rgba(0, 26, 71, 0.05);
   border-color: rgba(0, 26, 71, 0.12);
   color: var(--sophos-dark-blue);
   font-size: 0.82rem;
+  min-height: auto;
+}
+.add-note-form textarea {
+  resize: vertical;
+  min-height: 44px;
 }
 
 /* --- Quick Notes --- */
@@ -1797,12 +1803,18 @@ textarea {
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
 }
+.todo-add-note-row textarea,
 .todo-add-note-row input {
   flex: 1;
   background: rgba(0, 26, 71, 0.05);
   border-color: rgba(0, 26, 71, 0.12);
   color: var(--sophos-dark-blue);
   font-size: 0.8rem;
+  min-height: auto;
+}
+.todo-add-note-row textarea {
+  resize: vertical;
+  min-height: 44px;
 }
 
 .todo-list-actions {

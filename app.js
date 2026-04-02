@@ -204,6 +204,81 @@ function createEmptyMeddpicc() {
   const m = {}; MEDDPICC_FIELDS.forEach(f => m[f.key] = ''); return m;
 }
 
+// --- Natural language date extraction from todo titles ---
+function extractDateFromTitle(title) {
+  const today = new Date();
+  const patterns = [
+    { regex: /\b(today)\b/i, offset: 0 },
+    { regex: /\b(tomorrow)\b/i, offset: 1 },
+    { regex: /\b(day after tomorrow)\b/i, offset: 2 },
+    { regex: /\b(next monday)\b/i, dayTarget: 1 },
+    { regex: /\b(next tuesday)\b/i, dayTarget: 2 },
+    { regex: /\b(next wednesday)\b/i, dayTarget: 3 },
+    { regex: /\b(next thursday)\b/i, dayTarget: 4 },
+    { regex: /\b(next friday)\b/i, dayTarget: 5 },
+    { regex: /\b(on monday)\b/i, dayTarget: 1 },
+    { regex: /\b(on tuesday)\b/i, dayTarget: 2 },
+    { regex: /\b(on wednesday)\b/i, dayTarget: 3 },
+    { regex: /\b(on thursday)\b/i, dayTarget: 4 },
+    { regex: /\b(on friday)\b/i, dayTarget: 5 },
+    { regex: /\b(this monday)\b/i, dayTarget: 1, thisWeek: true },
+    { regex: /\b(this tuesday)\b/i, dayTarget: 2, thisWeek: true },
+    { regex: /\b(this wednesday)\b/i, dayTarget: 3, thisWeek: true },
+    { regex: /\b(this thursday)\b/i, dayTarget: 4, thisWeek: true },
+    { regex: /\b(this friday)\b/i, dayTarget: 5, thisWeek: true },
+    { regex: /\b(next week)\b/i, offset: 7 },
+    { regex: /\bin (\d+) days?\b/i, daysFromNow: true },
+    { regex: /\bin (\d+) weeks?\b/i, weeksFromNow: true },
+  ];
+
+  for (const p of patterns) {
+    const match = title.match(p.regex);
+    if (!match) continue;
+
+    let dueDate;
+    if (p.offset !== undefined) {
+      dueDate = new Date(today);
+      dueDate.setDate(dueDate.getDate() + p.offset);
+    } else if (p.dayTarget !== undefined) {
+      dueDate = new Date(today);
+      const currentDay = dueDate.getDay() || 7; // 1=Mon ... 7=Sun
+      let diff = p.dayTarget - currentDay;
+      if (p.thisWeek) {
+        if (diff <= 0) diff += 7; // if day already passed this week, go to next
+      } else {
+        if (diff <= 0) diff += 7; // "next X" or "on X" = next occurrence
+      }
+      dueDate.setDate(dueDate.getDate() + diff);
+    } else if (p.daysFromNow) {
+      dueDate = new Date(today);
+      dueDate.setDate(dueDate.getDate() + parseInt(match[1]));
+    } else if (p.weeksFromNow) {
+      dueDate = new Date(today);
+      dueDate.setDate(dueDate.getDate() + parseInt(match[1]) * 7);
+    }
+
+    if (dueDate) {
+      const cleanTitle = title.replace(match[0], '').replace(/\s{2,}/g, ' ').trim();
+      return { cleanTitle: cleanTitle || title.trim(), dueDate: formatDate(dueDate) };
+    }
+  }
+  return null;
+}
+
+// --- Linkify: convert URLs in text to clickable links, preserve newlines (HTML-safe) ---
+function linkifyText(text) {
+  if (!text) return '';
+  // Escape HTML first
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Convert URLs to links
+  const linked = escaped.replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener" style="color:var(--sophos-blue);text-decoration:underline;" onclick="event.stopPropagation()">$1</a>'
+  );
+  // Preserve newlines
+  return linked.replace(/\n/g, '<br>');
+}
+
 // --- Recurrence: compute next due date ---
 function computeNextDueDate(currentDue, recurrence, customDays) {
   const d = parseDate(currentDue);
@@ -578,10 +653,13 @@ document.addEventListener('alpine:init', () => {
     // --- Todo CRUD ---
     submitNewTodo() {
       if (!this.newTodo.title.trim()) return;
+      const parsed = extractDateFromTitle(this.newTodo.title.trim());
+      const title = parsed ? parsed.cleanTitle : this.newTodo.title.trim();
+      const dueDate = parsed ? parsed.dueDate : (this.newTodo.dueDate || this.today);
       this.todos.push({
         id: generateId('todo'),
-        title: this.newTodo.title.trim(),
-        dueDate: this.newTodo.dueDate || this.today,
+        title: title,
+        dueDate: dueDate,
         priority: this.newTodo.priority,
         category: this.newTodo.category,
         recurrence: this.newTodo.recurrence,
@@ -598,12 +676,15 @@ document.addEventListener('alpine:init', () => {
 
     // Quick add from planner day column
     quickAddTodo(dayKey) {
-      const title = prompt('Task title:');
-      if (!title || !title.trim()) return;
+      const rawTitle = prompt('Task title:');
+      if (!rawTitle || !rawTitle.trim()) return;
+      const parsed = extractDateFromTitle(rawTitle.trim());
+      const title = parsed ? parsed.cleanTitle : rawTitle.trim();
+      const dueDate = parsed ? parsed.dueDate : dayKey;
       this.todos.push({
         id: generateId('todo'),
-        title: title.trim(),
-        dueDate: dayKey,
+        title: title,
+        dueDate: dueDate,
         priority: 'medium',
         category: 'customerMeetings',
         recurrence: 'none',
