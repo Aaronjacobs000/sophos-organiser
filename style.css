@@ -2029,6 +2029,174 @@ textarea {
   color: var(--sophos-white);
 }
 
+/* --- Help Modal --- */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 26, 71, 0.85);
+  z-index: 350;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.help-modal {
+  background: var(--sophos-dark-blue);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--card-radius);
+  width: 95%;
+  max-width: 1000px;
+  height: 88vh;
+  max-height: 88vh;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr;
+  box-shadow: var(--shadow-elevated);
+  overflow: hidden;
+}
+
+.help-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.help-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.help-title svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--sophos-cyber-blue);
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.help-sidebar {
+  background: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: var(--spacing-md) 0;
+  overflow-y: auto;
+}
+
+.help-nav-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px var(--spacing-md);
+  font-size: 0.85rem;
+  color: var(--sophos-slate);
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.help-nav-item:hover {
+  color: var(--sophos-white);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.help-nav-item.active {
+  color: var(--sophos-white);
+  background: rgba(32, 6, 247, 0.15);
+  border-left-color: var(--sophos-blue);
+}
+
+.help-content {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.help-content h2 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--sophos-white);
+}
+
+.help-content h3 {
+  font-size: 1rem;
+  margin: var(--spacing-lg) 0 var(--spacing-sm);
+  color: var(--sophos-cyber-blue);
+  font-weight: 600;
+}
+
+.help-content p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: var(--spacing-sm);
+}
+
+.help-content ul {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 var(--spacing-md) var(--spacing-md);
+  padding-left: var(--spacing-md);
+}
+
+.help-content ul li {
+  margin-bottom: 6px;
+}
+
+.help-content strong {
+  color: var(--sophos-white);
+  font-weight: 600;
+}
+
+.help-content code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.85em;
+  color: var(--sophos-cyber-blue);
+}
+
+.help-content kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.78em;
+  color: var(--sophos-white);
+}
+
+.help-tip {
+  background: rgba(0, 237, 255, 0.06);
+  border-left: 3px solid var(--sophos-cyber-blue);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: var(--spacing-sm) 0;
+  font-size: 0.85rem;
+}
+
+.help-tip strong {
+  color: var(--sophos-cyber-blue);
+}
+
+.help-warning {
+  background: rgba(242, 148, 0, 0.06);
+  border-left: 3px solid var(--sophos-orange);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: var(--spacing-sm) 0;
+  font-size: 0.85rem;
+}
+
 /* --- Setup Wizard --- */
 .wizard-overlay {
   position: fixed;

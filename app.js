@@ -580,6 +580,8 @@ document.addEventListener('alpine:init', () => {
     newCadence: { label: '', duration: '30min', day: 'Mon', frequency: 'weekly', description: '' },
     showWizard: !loaded, // Show wizard on first run (no existing data)
     wizardName: '',
+    showHelp: false,
+    helpSection: 'overview',
     showReport: false,
     reportMonth: formatDate(new Date()).substring(0, 7), // YYYY-MM
     reportShow: { cadence: true, todos: true, meetings: true, opportunities: true, issues: true },
@@ -1260,6 +1262,7 @@ function initSortable(el, dayKey) {
 document.addEventListener('keydown', (e) => {
   const s = Alpine.store('app'); if (!s) return;
   if (e.key === 'Escape') {
+    if (s.showHelp) { s.showHelp = false; return; }
     if (s.showReport) { s.showReport = false; return; }
     s.showSettings = false; s.showAddOpp = false; s.showAddIssue = false;
     s.showAddTodo = false; s.expandedTodo = null; s.expandedOpp = null; s.expandedIssue = null;

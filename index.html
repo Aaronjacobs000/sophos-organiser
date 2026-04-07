@@ -32,9 +32,8 @@
           <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><rect x="3" y="3" width="18" height="12" rx="2"/><polyline points="7 8 12 12 17 8"/></svg>
           Reports
         </button>
+        <button class="btn-icon" @click="$store.app.showHelp = true" title="Help"><svg><use href="#icon-help"/></svg></button>
         <button class="btn-icon" @click="$store.app.showSettings = true" title="Settings"><svg><use href="#icon-settings"/></svg></button>
-        <button class="btn-icon" @click="$store.app.exportData()" title="Export backup"><svg><use href="#icon-download"/></svg></button>
-        <label class="btn-icon" title="Import backup" style="cursor:pointer"><svg><use href="#icon-upload"/></svg><input type="file" accept=".json" @change="$store.app.importData($event)" class="sr-only"></label>
       </div>
     </header>
 
@@ -580,6 +579,271 @@
       </section>
     </main>
 
+    <!-- ============ HELP MODAL ============ -->
+    <div class="help-overlay" x-show="$store.app.showHelp" x-transition.opacity @click.self="$store.app.showHelp = false">
+      <div class="help-modal" @click.stop>
+        <div class="help-header">
+          <div class="help-title"><svg><use href="#icon-help"/></svg> Help & Tips</div>
+          <button class="btn-icon" @click="$store.app.showHelp = false">
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="help-sidebar">
+          <template x-for="[key, label] in [['overview','Overview'],['planner','Weekly Planner'],['todos','To-Do List'],['cadence','Weekly Cadence'],['opportunities','Opportunities'],['watchlist','Watch List'],['notes','Quick Notes'],['meetings','Meeting Tracker'],['reports','Reports'],['settings','Settings & Customization'],['shortcuts','Tips & Shortcuts'],['data','Your Data']]" :key="key">
+            <button class="help-nav-item" :class="{ active: $store.app.helpSection === key }" @click="$store.app.helpSection = key" x-text="label"></button>
+          </template>
+        </div>
+        <div class="help-content">
+
+          <!-- Overview -->
+          <div x-show="$store.app.helpSection === 'overview'">
+            <h2>Welcome to your Personal Organiser</h2>
+            <p>This tool is your personal cockpit for the week. It is designed to keep you focused on the activities that drive new business while staying on top of your existing pipeline, customer issues, and the cadence rhythm your role expects from you.</p>
+            <p>Everything you do here is saved to a <code>data.json</code> file in this folder. If you keep this folder in OneDrive, your data syncs across machines automatically.</p>
+            <h3>The big idea</h3>
+            <p>The <strong>To-Do List</strong> is your master task list. Anything with a due date in the current week appears as a card on the <strong>Weekly Planner</strong>. The planner is a visual board view of your to-dos, plus your daily cadence activities and any next steps from your opportunities and watch list.</p>
+            <div class="help-tip"><strong>Tip:</strong> Start your morning by opening the planner. Today's column is highlighted with a blue accent — work top-down through the chips and cards to plan your day.</div>
+          </div>
+
+          <!-- Planner -->
+          <div x-show="$store.app.helpSection === 'planner'">
+            <h2>Weekly Planner</h2>
+            <p>The planner shows Monday through Friday as five columns. Each column is everything happening on that day.</p>
+            <h3>What appears in each column</h3>
+            <ul>
+              <li><strong>Cadence chips</strong> (teal) — recurring activities assigned to that day from your role's cadence template. Click to mark complete with a timestamp.</li>
+              <li><strong>Opportunity next steps</strong> (green) — deals where you set a Next Step Date for that day. Click to jump to the opportunity.</li>
+              <li><strong>Issue next steps</strong> (orange) — watch list items where you set a Next Step Date for that day. Click to jump to the issue.</li>
+              <li><strong>To-do cards</strong> — tasks with that day as their due date.</li>
+              <li><strong>Completed</strong> — collapsible section showing tasks you ticked off that day.</li>
+            </ul>
+            <h3>Working with cards</h3>
+            <ul>
+              <li>Click the checkbox to mark a task done. Recurring tasks auto-create their next occurrence.</li>
+              <li>Drag a card between days to move its due date.</li>
+              <li>Click <strong>+ Add</strong> at the bottom of any column to quickly add a task to that day.</li>
+            </ul>
+            <div class="help-tip"><strong>Tip:</strong> The today column has a blue left border — easy to spot at a glance.</div>
+          </div>
+
+          <!-- To-Do List -->
+          <div x-show="$store.app.helpSection === 'todos'">
+            <h2>To-Do List</h2>
+            <p>This is your master task list. Every task has a due date, priority, category, and optional notes. The list is the source of truth — the planner is just a date-filtered view of it.</p>
+            <h3>Adding tasks</h3>
+            <p>Click <strong>+ Add To-Do</strong> and fill in the title, due date, priority (Urgent / High / Medium / Low), category, and optionally a recurrence rule.</p>
+            <div class="help-tip"><strong>Smart date parsing:</strong> Type the date naturally in the title and it gets extracted automatically:
+              <ul style="margin-top:6px;">
+                <li>"Call Acme tomorrow" → due tomorrow</li>
+                <li>"Send proposal on Friday" → due next Friday</li>
+                <li>"Follow up in 3 days" → due 3 days from now</li>
+                <li>"Review deck next week" → due 7 days from now</li>
+              </ul>
+              Supported phrases: today, tomorrow, day after tomorrow, next/on/this Mon-Fri, next week, in X days, in X weeks.
+            </div>
+            <h3>Recurring tasks</h3>
+            <p>Set a recurrence (daily, weekly, fortnightly, monthly, annual, or custom every X days). When you complete a recurring task, the next occurrence is created automatically with the new due date.</p>
+            <h3>Filters and sorting</h3>
+            <ul>
+              <li><strong>Active</strong> (default) — all uncompleted tasks</li>
+              <li><strong>Today</strong> — just today's tasks</li>
+              <li><strong>Overdue</strong> — past-due tasks (red badge in sidebar)</li>
+              <li><strong>Completed</strong> — your done list</li>
+              <li><strong>All</strong> — everything</li>
+            </ul>
+            <p>Sort by due date, priority, category, or title — ascending or descending.</p>
+            <h3>Notes timeline</h3>
+            <p>Click any task to expand it and add timestamped notes. Notes are append-only and multi-line — press <kbd>Enter</kbd> to submit, <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line. URLs in notes become clickable links.</p>
+          </div>
+
+          <!-- Cadence -->
+          <div x-show="$store.app.helpSection === 'cadence'">
+            <h2>Weekly Cadence</h2>
+            <p>The cadence is your role's rhythm — the recurring activities you should do every week, fortnight, or month. For Sales Executives, these come from the ANZ Day-in-the-Life Handbook. For Sales Engineers, these come from the FY26 SE framework.</p>
+            <h3>How it works</h3>
+            <ul>
+              <li>Each cadence item has a frequency (weekly / fortnightly / monthly) and a day assignment (Mon-Fri).</li>
+              <li>Items appear on their assigned day in the planner as teal chips.</li>
+              <li>Fortnightly items only appear on even ISO weeks. Monthly items only appear in the first week of each month.</li>
+              <li>Click a cadence chip on the planner OR a row in the cadence section to mark it complete. The exact timestamp is stored.</li>
+            </ul>
+            <h3>Why timestamps matter</h3>
+            <p>The timestamps power the <strong>cadence honesty</strong> view in the Reports section. If you tick everything off five minutes before your 1:1, your manager will see all dots stacked on Friday afternoon. If you do them throughout the week, the dots spread out across days.</p>
+            <div class="help-warning"><strong>Be honest:</strong> The point of cadence tracking is to build the habit, not to game the system. Use it to actually plan your week.</div>
+            <h3>Customization</h3>
+            <p>Open <strong>Settings → Cadence Items</strong> to add your own activities, change days, or remove items. You can also load templates from the other role to add their items to yours.</p>
+          </div>
+
+          <!-- Opportunities -->
+          <div x-show="$store.app.helpSection === 'opportunities'">
+            <h2>Opportunities</h2>
+            <p>Track your priority deals here. This is your personal pipeline view, separate from Salesforce — useful for the deals you are actively working on this quarter.</p>
+            <h3>Each opportunity captures</h3>
+            <ul>
+              <li>Account name, deal size, type (New Logo / Expansion / Renewal), stage</li>
+              <li>Salesforce link (clickable, opens in a new tab)</li>
+              <li>Expected close date with urgency colour-coding (orange under 14 days, red under 7 days)</li>
+              <li>Open / Closed status</li>
+              <li>Priority flag</li>
+              <li>Next Step Date and description (appears on the planner)</li>
+              <li>Timestamped notes timeline</li>
+              <li>MEDDPICC qualification fields (auto-shown for deals ≥ $30K ACV)</li>
+            </ul>
+            <h3>Filters</h3>
+            <p>Two filter rows: status (Open / Closed / All) and type (All Types / New Logo / Expansion / Renewal). They compose — e.g., "Open + New Logo" shows only active new logo deals. Sort by close date, deal size, priority, or account name.</p>
+            <h3>MEDDPICC</h3>
+            <p>For deals worth $30K or more, an 8-field MEDDPICC qualification panel appears. The score badge on the card (e.g., "MEDDPICC 5/8") shows how many fields you have filled in. Red ≤3, orange 4-6, green 7-8.</p>
+            <div class="help-tip"><strong>Workflow:</strong> Click anywhere on a card to expand it. Set the Next Step Date to today or tomorrow to see it pop up on the planner.</div>
+          </div>
+
+          <!-- Watch List -->
+          <div x-show="$store.app.helpSection === 'watchlist'">
+            <h2>Watch List</h2>
+            <p>The watch list is for things you need to monitor but aren't tasks — open support cases, customer pain points, escalations, anything you need to keep on your radar.</p>
+            <h3>Each item has</h3>
+            <ul>
+              <li>Title and account</li>
+              <li>Type icon: Support Case (headset), Customer Pain Point (triangle), Escalation (arrow), Other (circle)</li>
+              <li>Open / Resolved status</li>
+              <li>Optional link (e.g., support portal URL)</li>
+              <li>Days-open counter</li>
+              <li>Next Step Date (appears as orange chip on the planner)</li>
+              <li>Timestamped append-only notes</li>
+            </ul>
+            <h3>How to use it</h3>
+            <p>Add an item when something comes up that needs follow-through but isn't a discrete task. As things progress, add notes (with timestamps) so you have a full history. When the issue is fully closed out, mark it Resolved.</p>
+            <div class="help-tip"><strong>Tip:</strong> Set a Next Step Date when you commit to a follow-up — it shows up on the planner as a reminder, and clicking it jumps back to the item.</div>
+          </div>
+
+          <!-- Quick Notes -->
+          <div x-show="$store.app.helpSection === 'notes'">
+            <h2>Quick Notes</h2>
+            <p>A simple scratchpad for things that don't fit anywhere else — ideas, call notes, reminders, snippets you want to keep handy.</p>
+            <h3>Features</h3>
+            <ul>
+              <li>Each note is timestamped automatically</li>
+              <li>Multi-line — press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit</li>
+              <li>URLs become clickable links automatically</li>
+              <li><strong>Pin</strong> important notes to keep them at the top</li>
+              <li>Search box filters notes in real time</li>
+            </ul>
+            <div class="help-tip"><strong>Use cases:</strong> Quick competitive intel from a partner, a customer's offhand comment to follow up on later, login credentials for a demo environment, etc.</div>
+          </div>
+
+          <!-- Meetings -->
+          <div x-show="$store.app.helpSection === 'meetings'">
+            <h2>Meeting Tracker</h2>
+            <p>The sidebar meeting counter helps you track customer and partner meetings against the handbook targets.</p>
+            <h3>Targets per week</h3>
+            <ul>
+              <li><strong>Customer CQ</strong> (Current Quarter): 7 meetings</li>
+              <li><strong>Customer NQ</strong> (Next Quarter): 3 meetings</li>
+              <li><strong>Partner</strong>: 2 meetings</li>
+              <li><strong>Total target</strong>: 12 meetings/week</li>
+            </ul>
+            <p>Click <strong>+</strong> after each meeting to increment, <strong>−</strong> to decrement. The number turns green when you hit the target, orange when you're below.</p>
+            <div class="help-tip"><strong>Why it matters:</strong> The handbook says new business drives 85% of your commission. Customer face time is the engine. The tracker keeps you honest about it without needing to count manually.</div>
+          </div>
+
+          <!-- Reports -->
+          <div x-show="$store.app.helpSection === 'reports'">
+            <h2>Reports</h2>
+            <p>The Reports button (top right) opens a monthly view designed for 1:1s with your manager. Pick a month, toggle which sections to show, and print or export to PDF.</p>
+            <h3>What's included</h3>
+            <ul>
+              <li><strong>Summary cards</strong> — overall cadence completion %, weeks flagged for rushed completion, task completion %, average meetings per week</li>
+              <li><strong>Per-week breakdown</strong> — every week of the month with cadence timeline, meetings vs targets, tasks by category, pipeline & issue activity</li>
+              <li><strong>Cadence honesty</strong> — visual timeline showing exactly when each cadence item was ticked off. Dots positioned on a Mon-Fri axis. Missed items shown in red.</li>
+            </ul>
+            <h3>Honesty flags</h3>
+            <ul>
+              <li><strong>Concern</strong> (red): 5+ items completed within 10 minutes of each other</li>
+              <li><strong>Warning</strong> (orange): 4+ items within 30 minutes, or all items on the same day</li>
+              <li><strong>Good spread</strong> (green): items completed across 3+ different days</li>
+            </ul>
+            <h3>Sharing with your manager</h3>
+            <p>Click <strong>Print / Export</strong> to open the print dialog. The dark theme converts to a clean light layout, interactive controls are hidden. Save as PDF and email it to your manager before your 1:1.</p>
+            <div class="help-tip"><strong>Toggle sections:</strong> Use the toggle buttons (Cadence, To-Dos, Meetings, Opps, Issues) to focus on what you want to discuss.</div>
+          </div>
+
+          <!-- Settings -->
+          <div x-show="$store.app.helpSection === 'settings'">
+            <h2>Settings & Customization</h2>
+            <p>Open Settings via the gear icon in the header.</p>
+            <h3>Display</h3>
+            <ul>
+              <li><strong>Show weekends</strong> — adds Saturday and Sunday columns to the planner</li>
+              <li><strong>Carry forward incomplete tasks</strong> — when a week ends, incomplete tasks roll into the new week</li>
+            </ul>
+            <h3>Activity Targets</h3>
+            <p>Adjust the target percentages for each activity category. These show as the dotted lines on the sidebar activity bars.</p>
+            <h3>Cadence Items</h3>
+            <p>Add, edit, or remove your cadence activities. Each item has a label, day, frequency, duration, and description.</p>
+            <ul>
+              <li><strong>+ Add</strong> — create a new custom cadence item</li>
+              <li><strong>Load template</strong> — append items from the Sales Executive or Sales Engineer template (skips duplicates by label)</li>
+              <li><strong>Clear All</strong> — remove all cadence items (with confirmation)</li>
+              <li>Change the day for any item via the inline dropdown</li>
+            </ul>
+            <h3>Data Management</h3>
+            <ul>
+              <li><strong>Export Backup</strong> — download a timestamped JSON file of everything</li>
+              <li><strong>Import Backup</strong> — restore from a backup file (replaces current data)</li>
+              <li><strong>Clear All Data</strong> — wipes everything (with confirmation). Useful if you want to start fresh.</li>
+            </ul>
+          </div>
+
+          <!-- Shortcuts -->
+          <div x-show="$store.app.helpSection === 'shortcuts'">
+            <h2>Tips & Keyboard Shortcuts</h2>
+            <h3>Keyboard shortcuts</h3>
+            <ul>
+              <li><kbd>Ctrl</kbd> + <kbd>→</kbd> — Next week</li>
+              <li><kbd>Ctrl</kbd> + <kbd>←</kbd> — Previous week</li>
+              <li><kbd>Esc</kbd> — Close any open modal, form, or panel</li>
+              <li><kbd>Enter</kbd> — Submit a note (in note fields)</li>
+              <li><kbd>Shift</kbd> + <kbd>Enter</kbd> — New line in a note</li>
+              <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> — Submit a Quick Note</li>
+            </ul>
+            <h3>Productivity tips</h3>
+            <ul>
+              <li><strong>Type dates in titles</strong> — "Call John tomorrow" or "Review on Friday" auto-sets the due date</li>
+              <li><strong>Set Next Step dates</strong> on opportunities and watch list items so they pop onto the planner</li>
+              <li><strong>Use recurring tasks</strong> for anything you do regularly — daily forecast updates, weekly 1:1 prep, monthly reviews</li>
+              <li><strong>Click planner chips</strong> to navigate to the source item (opportunity or watch list)</li>
+              <li><strong>Pin important notes</strong> in the Quick Notes section to keep them visible</li>
+              <li><strong>Drag to-dos between days</strong> on the planner to reschedule</li>
+              <li><strong>Use the Today filter</strong> on the to-do list each morning to see your day clearly</li>
+            </ul>
+            <h3>Honest cadence completion</h3>
+            <p>The reports page shows when you ticked off each cadence item. If you do them all in a Friday afternoon panic, the timestamps will tell on you. The point is to actually do the work — checking off items is the easy part.</p>
+          </div>
+
+          <!-- Data -->
+          <div x-show="$store.app.helpSection === 'data'">
+            <h2>Your Data</h2>
+            <p>Everything you enter is saved to a file called <code>data.json</code> in the same folder as the app. This is a plain text file in JSON format.</p>
+            <h3>How saving works</h3>
+            <p>When you launch via <code>Start Organiser.bat</code> (Windows) or <code>Start Organiser.command</code> (Mac), a tiny local web server starts. Every change you make is automatically saved to <code>data.json</code> within a fraction of a second. You don't need to click save.</p>
+            <h3>Backup with OneDrive</h3>
+            <p>If you keep the entire folder in your OneDrive, your <code>data.json</code> syncs to the cloud automatically. This means:</p>
+            <ul>
+              <li>Your data is backed up without you doing anything</li>
+              <li>You can use the organiser on your PC and your laptop, switching seamlessly</li>
+              <li>If you switch browsers, your data is still there</li>
+              <li>If you reset your machine, your data is still in OneDrive</li>
+            </ul>
+            <div class="help-warning"><strong>Multi-device tip:</strong> Close the organiser on one machine before opening on another. OneDrive can have sync conflicts if both are writing to the file at the same time.</div>
+            <h3>Manual backups</h3>
+            <p>The Settings panel has Export Backup and Import Backup buttons. Export gives you a dated JSON file you can save anywhere. Import lets you restore from that file.</p>
+            <h3>Privacy</h3>
+            <p>Your data never leaves your machine (except via OneDrive sync, which you control). There is no telemetry, no external API calls, no analytics. The local server only listens on <code>localhost</code> — it cannot be reached from anywhere else on your network.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- ============ SETUP WIZARD ============ -->
     <div class="wizard-overlay" x-show="$store.app.showWizard">
       <div class="wizard-card">
@@ -835,6 +1099,7 @@
     <symbol id="icon-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
     <symbol id="icon-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
     <symbol id="icon-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
     <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
     <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
     <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
