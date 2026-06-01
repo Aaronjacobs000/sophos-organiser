@@ -676,10 +676,19 @@ document.addEventListener('alpine:init', () => {
       debouncedSave(this);
     },
 
-    // Quick add from planner day column
-    quickAddTodo(dayKey) {
-      const rawTitle = prompt('Task title:');
-      if (!rawTitle || !rawTitle.trim()) return;
+    // Quick add from planner day column.
+    // `detail` is an optional { title, category, priority } object supplied by the
+    // inline planner form. Called without it, falls back to a simple prompt().
+    quickAddTodo(dayKey, detail) {
+      let rawTitle = '', category = 'customerMeetings', priority = 'medium';
+      if (detail && typeof detail === 'object') {
+        rawTitle = detail.title || '';
+        category = detail.category || category;
+        priority = detail.priority || priority;
+      } else {
+        rawTitle = prompt('Task title:') || '';
+      }
+      if (!rawTitle.trim()) return;
       const parsed = extractDateFromTitle(rawTitle.trim());
       const title = parsed ? parsed.cleanTitle : rawTitle.trim();
       const dueDate = parsed ? parsed.dueDate : dayKey;
@@ -687,8 +696,8 @@ document.addEventListener('alpine:init', () => {
         id: generateId('todo'),
         title: title,
         dueDate: dueDate,
-        priority: 'medium',
-        category: 'customerMeetings',
+        priority: priority,
+        category: category,
         recurrence: 'none',
         customDays: null,
         completed: false,
@@ -888,6 +897,15 @@ document.addEventListener('alpine:init', () => {
       this.todos.forEach(t => {
         if (weekSet.has(t.dueDate) && counts[t.category] !== undefined) { counts[t.category]++; total++; }
       });
+      // Fold the "Meetings This Week" counter into activity so logged meetings
+      // count toward the week's mix: customer meetings -> Customer Meetings,
+      // partner meetings -> Partner Engagement.
+      const m = this.currentMeetings;
+      const meetingCustomer = (m.customerCQ || 0) + (m.customerNQ || 0);
+      const meetingPartner = m.partner || 0;
+      counts.customerMeetings += meetingCustomer;
+      counts.partnerEngagement += meetingPartner;
+      total += meetingCustomer + meetingPartner;
       const targets = this.settings.timeAllocationTargets;
       return CATEGORY_KEYS.map(k => {
         const count = counts[k], pct = total > 0 ? Math.round((count / total) * 100) : 0, target = targets[k] || 0;

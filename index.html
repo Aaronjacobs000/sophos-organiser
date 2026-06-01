@@ -78,7 +78,7 @@
         <div class="meeting-summary"><span>Total</span><span x-text="$store.app.totalMeetings + ' / 12'"></span></div>
       </div>
 
-      <div class="sidebar-section-title">Activity This Week</div>
+      <div class="sidebar-section-title" title="Includes to-dos due this week plus logged meetings (customer meetings count as Customer Meetings, partner meetings as Partner Engagement)">Activity This Week</div>
       <div class="activity-tracker">
         <template x-for="stat in $store.app.activityStats" :key="stat.key">
           <div class="activity-bar-group">
@@ -188,10 +188,30 @@
                   </div>
                 </div>
               </template>
-              <div class="day-add-btn">
-                <button class="btn-add-todo" @click="$store.app.quickAddTodo(day.dateStr)">
+              <div class="day-add-btn" x-data="{ adding: false, title: '', category: 'customerMeetings', priority: 'medium' }">
+                <button class="btn-add-todo" x-show="!adding" @click="adding = true; $nextTick(() => $refs.qaTitle && $refs.qaTitle.focus())">
                   <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add
                 </button>
+                <div class="add-todo-form" x-show="adding" x-transition.opacity @keydown.escape.stop="adding = false; title = ''" style="border-top:none;">
+                  <input type="text" x-ref="qaTitle" x-model="title" placeholder="Task title..."
+                         @keydown.enter.prevent="if (title.trim()) { $store.app.quickAddTodo(day.dateStr, { title, category, priority }); title = ''; adding = false; }">
+                  <div class="add-todo-form-row">
+                    <select x-model="category" title="Category">
+                      <template x-for="[key, cat] in Object.entries(CATEGORIES)" :key="key">
+                        <option :value="key" x-text="cat.label"></option>
+                      </template>
+                    </select>
+                    <select x-model="priority" title="Priority">
+                      <template x-for="[key, p] in Object.entries(PRIORITIES)" :key="key">
+                        <option :value="key" x-text="p.label"></option>
+                      </template>
+                    </select>
+                  </div>
+                  <div class="add-todo-form-actions">
+                    <button class="btn-primary btn-sm" @click="if (title.trim()) { $store.app.quickAddTodo(day.dateStr, { title, category, priority }); title = ''; adding = false; }" style="flex:1;">Add</button>
+                    <button class="btn-secondary btn-sm" @click="adding = false; title = ''">Cancel</button>
+                  </div>
+                </div>
               </div>
             </div>
           </template>
@@ -621,7 +641,7 @@
             <ul>
               <li>Click the checkbox to mark a task done. Recurring tasks auto-create their next occurrence.</li>
               <li>Drag a card between days to move its due date.</li>
-              <li>Click <strong>+ Add</strong> at the bottom of any column to quickly add a task to that day.</li>
+              <li>Click <strong>+ Add</strong> at the bottom of any column to quickly add a task to that day, picking its category and priority inline. Press <kbd>Enter</kbd> to save.</li>
             </ul>
             <div class="help-tip"><strong>Tip:</strong> The today column has a blue left border — easy to spot at a glance.</div>
           </div>

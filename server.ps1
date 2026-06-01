@@ -9,6 +9,18 @@ param(
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $url = "http://localhost:$Port/"
 
+# --- Single-instance guard ---------------------------------------------------
+# Stops duplicate servers when the app is launched more than once (e.g. an
+# impatient double-click after a reboot). The first process to grab the named
+# mutex owns the port; any later instance exits quietly instead of fighting
+# over port 8080 and throwing a confusing error.
+$createdNew = $false
+$mutex = New-Object System.Threading.Mutex($true, "Local\SophosOrganiserServer_$Port", [ref]$createdNew)
+if (-not $createdNew) {
+    # Another instance is already serving this port — nothing to do.
+    exit 0
+}
+
 # MIME types for static files
 $mimeTypes = @{
     '.html' = 'text/html; charset=utf-8'

@@ -37,7 +37,7 @@ When you're done for the day, close the terminal window.
 
 ## How It Works
 
-When you launch the organiser, it runs a tiny local web server on your machine (PowerShell on Windows, Python on Mac — both built in, no extra software to install). Your browser connects to this server at `http://localhost:8080`.
+When you launch the organiser, it runs a tiny local web server on your machine (PowerShell on Windows, Python on Mac — both built in, no extra software to install). A small "Starting…" window appears first, the launcher waits until the server is actually ready (this can take a few seconds, longer after a reboot), and only then opens your browser at `http://localhost:8080`. If you accidentally double-click the launcher more than once, the extra copies bow out quietly instead of clashing over the port.
 
 Every time you make a change, the organiser automatically saves to a `data.json` file in the same folder as the app. Because this folder lives in your OneDrive, your data syncs to the cloud automatically.
 
@@ -113,10 +113,11 @@ You can also use the **Export** button (download icon in the header) to save a t
 
 ## Troubleshooting
 
-**Windows: "Start Organiser.bat" doesn't work / nothing happens**
-- Make sure you're on Windows 10 or 11 (PowerShell is built in)
-- Right-click the .bat file and choose "Run as administrator" if needed
-- If port 8080 is in use, the terminal will show an error — close whatever else is using that port
+**Windows: "Start Organiser.bat" is slow to open after a reboot**
+- This is normal — straight after a reboot, Windows and OneDrive are still warming up, so the server can take 10–20 seconds to start. A "Starting…" window appears immediately so you know it's working. Wait for the browser to open; you don't need to click again.
+- Clicking the launcher a few times is harmless now — duplicate copies exit on their own.
+- Make sure you're on Windows 10 or 11 (PowerShell is built in).
+- If port 8080 is genuinely in use by another app, the server window will show an error — close whatever else is using that port.
 
 **Mac: "Start Organiser.command" won't open**
 - Right-click the file, choose **Open**, then click **Open** in the dialog (first time only)
